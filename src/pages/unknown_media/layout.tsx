@@ -2,14 +2,14 @@
  * @file 索引后没有找到匹配信息的电视剧（后面称为「未知电视剧」）
  */
 import { createSignal, For, onMount, Show } from "solid-js";
+import { ArrowLeft } from "lucide-solid";
 
 import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { ScrollView, KeepAliveRouteView } from "@/components/ui";
-import { ViewComponent } from "@/types";
-// import { homeUnknownMoviePage, homeUnknownTVPage } from "@/store";
-import { cn } from "@/utils";
 import { TabHeader } from "@/components/ui/tab-header";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
+import { ViewComponent } from "@/types";
+import { cn } from "@/utils";
 
 export const UnknownMediaLayout: ViewComponent = (props) => {
   const { app, view } = props;
@@ -63,7 +63,16 @@ export const UnknownMediaLayout: ViewComponent = (props) => {
     <ScrollView store={scrollView} class="flex flex-col box-border h-screen">
       <div class="relative">
         <div class="p-8 pb-0">
-          <h1 class="text-2xl">解析结果</h1>
+          <h1 class="flex items-center space-x-2 text-2xl cursor-pointer">
+            <div
+              onClick={() => {
+                app.back();
+              }}
+            >
+              <ArrowLeft class="w-6 h-6" />
+            </div>
+            <div>解析结果</div>
+          </h1>
           <div class="mt-8">
             <TabHeader store={tab} />
           </div>
@@ -90,7 +99,6 @@ export const UnknownMediaLayout: ViewComponent = (props) => {
                     >
                       <PageContent
                         app={app}
-                        router={app.router}
                         parent={{
                           scrollView,
                         }}

@@ -178,7 +178,7 @@ export class PopperCore extends BaseDomain<TheTypesOfEvents> {
   setConfig(config: { placement?: Placement; strategy?: Strategy }) {}
   /** 计算浮动元素位置 */
   async place() {
-    console.log(...this.log("place", this.reference, this.floating));
+    // console.log(...this.log("place", this.reference, this.floating));
     this.middleware = [
       // arrow({
       //   element: this.floating,

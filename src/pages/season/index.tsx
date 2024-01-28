@@ -2,6 +2,7 @@
  * @file
  */
 import { createSignal, For, Show } from "solid-js";
+import { ArrowLeft } from "lucide-solid";
 
 import { ViewComponent } from "@/types";
 import { Button, Input } from "@/components/ui";
@@ -28,7 +29,14 @@ export const HomeSeasonListPage: ViewComponent = (props) => {
     <>
       <div class="h-screen p-8 whitespace-nowrap">
         <div class="page__header flex items-center space-x-4">
-          <h1 class="text-2xl">
+          <h1 class="flex items-center space-x-2 text-2xl cursor-pointer">
+            <div
+              onClick={() => {
+                app.back();
+              }}
+            >
+              <ArrowLeft class="w-6 h-6" />
+            </div>
             <div>电视剧列表</div>
           </h1>
           <div class="flex items-center space-x-2"></div>

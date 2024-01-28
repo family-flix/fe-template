@@ -115,7 +115,7 @@ export class MenuItemCore extends BaseDomain<TheTypesOfEvents> {
     if (this._enter) {
       return;
     }
-    this.log("enter");
+    // this.log("enter");
     this._enter = true;
     this.state.focused = true;
     this.emit(Events.Enter);
@@ -133,7 +133,7 @@ export class MenuItemCore extends BaseDomain<TheTypesOfEvents> {
     if (this._enter === false) {
       return;
     }
-    this.log("leave");
+    // this.log("leave");
     this._enter = false;
     this.state.focused = false;
     this.emit(Events.Leave);
@@ -143,7 +143,7 @@ export class MenuItemCore extends BaseDomain<TheTypesOfEvents> {
     if (this.state.focused) {
       return;
     }
-    this.log("focus");
+    // this.log("focus");
     this.state.focused = true;
     this.emit(Events.Focus);
     this.emit(Events.StateChange, { ...this.state });
@@ -152,7 +152,7 @@ export class MenuItemCore extends BaseDomain<TheTypesOfEvents> {
     if (this.state.focused === false) {
       return;
     }
-    this.log("blur");
+    // this.log("blur");
     this.state.focused = false;
     this._enter = false;
     this.emit(Events.Blur);
@@ -172,10 +172,10 @@ export class MenuItemCore extends BaseDomain<TheTypesOfEvents> {
       this.menu.reset();
     }
   }
-  unmount() {
-    super.unmount();
+  destroy() {
+    super.destroy();
     if (this.menu) {
-      this.menu.unmount();
+      this.menu.destroy();
     }
     this.reset();
   }

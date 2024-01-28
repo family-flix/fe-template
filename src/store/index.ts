@@ -4,11 +4,11 @@
  */
 import { ListCore } from "@/domains/list";
 import { Application } from "@/domains/app";
+import { HistoryCore } from "@/domains/history";
 import { NavigatorCore } from "@/domains/navigator";
 import { RouteViewCore, onViewCreated } from "@/domains/route_view";
 import { HttpClientCore } from "@/domains/http_client";
 import { BizError } from "@/domains/error";
-// import { has_admin } from "@/services";
 import { Result } from "@/types";
 
 import { cache } from "./cache";
@@ -17,12 +17,13 @@ import { routes } from "./routes";
 
 NavigatorCore.prefix = PATHNAME_PREFIX;
 
-export const router = new NavigatorCore();
 // const views: Record<string, RouteViewCore> = {};
 // onViewCreated((view) => {
 //   views[view.key] = view;
 // });
-const rootView = new RouteViewCore({
+
+const router = new NavigatorCore();
+const view = new RouteViewCore({
   key: "/",
   title: "ROOT",
   component: "div",
@@ -30,14 +31,17 @@ const rootView = new RouteViewCore({
   parent: null,
   views: [],
 });
-export const app = new Application({
-  view: rootView,
-  user,
+const history = new HistoryCore({
+  view,
   router,
   routes,
   views: {
-    "/": rootView,
+    "/": view,
   },
+});
+export const app = new Application({
+  $user: user,
+  $history: history,
   async beforeReady() {
     if (!user.isLogin) {
       // const r = await has_admin();
@@ -62,9 +66,6 @@ export const request = new HttpClientCore({
   app,
   user,
 });
-// @ts-ignore
-window.__APP = app;
-// setApp(app);
 user.onTip((msg) => {
   app.tip(msg);
 });

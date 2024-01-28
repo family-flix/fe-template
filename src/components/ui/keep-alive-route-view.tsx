@@ -1,7 +1,7 @@
 /**
  * @file 页面容器
  */
-import { createSignal, JSX, onCleanup } from "solid-js";
+import { createSignal, JSX, onCleanup, onMount } from "solid-js";
 
 import { RouteViewCore } from "@/domains/route_view";
 
@@ -32,8 +32,10 @@ export function KeepAliveRouteView(
   store.onStateChange((nextState) => {
     setState(nextState);
   });
+  onMount(() => {
+    store.mount();
+  });
   onCleanup(() => {
-    store.setUnload();
     // setPageContent(loading);
   });
 

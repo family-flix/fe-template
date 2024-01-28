@@ -123,7 +123,7 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
       if (this.mounted === false) {
         return;
       }
-      this.unmount();
+      this.destroy();
     }, 120);
   }
   send(event: "UNMOUNT" | "ANIMATION_OUT" | "MOUNT" | "ANIMATION_END" | "MOUNT") {
@@ -136,7 +136,7 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
     // this.calc(nextState);
   }
   /** 将 DOM 从页面卸载 */
-  unmount() {
+  destroy() {
     // console.log("[]PresenceCore - destroy", this.state.open, this.state.unmounted);
     if (this.open) {
       // this.emit(Events.Show);

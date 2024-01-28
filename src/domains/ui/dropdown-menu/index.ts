@@ -136,9 +136,9 @@ export class DropdownMenuCore extends BaseDomain<TheTypesOfEvents> {
   hide() {
     this.menu.hide();
   }
-  unmount() {
-    super.unmount();
-    this.menu.unmount();
+  destroy() {
+    super.destroy();
+    this.menu.destroy();
   }
 
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {

@@ -4,31 +4,25 @@
 
 import { BaseDomain, Handler } from "@/domains/base";
 import { UserCore } from "@/domains/user";
-import { NavigatorCore } from "@/domains/navigator";
-import { RouteViewCore } from "@/domains/route_view";
-import { PathnameKey, Result, RouteConfig } from "@/types";
-import { query_stringify } from "@/utils";
-
-// import { routes } from '@/store';
+import { HistoryCore } from "@/domains/history";
+import { Result } from "@/types";
 
 enum Events {
-  Ready,
   Tip,
   Error,
   Login,
   Logout,
-  // 一些平台相关的事件
+  /** 生命周期 */
+  Ready,
+  Show,
+  Hidden,
+  /** 平台相关 */
   PopState,
   Resize,
   Blur,
   Keydown,
   EscapeKeyDown,
-  ClickLink,
-  Show,
-  Hidden,
   StateChange,
-  // 该怎么处理？
-  DrivesChange,
 }
 type TheTypesOfEvents = {
   [Events.Ready]: void;
@@ -49,10 +43,6 @@ type TheTypesOfEvents = {
     key: string;
   };
   [Events.EscapeKeyDown]: void;
-  [Events.ClickLink]: {
-    href: string;
-    target: string | null;
-  };
   [Events.Blur]: void;
   [Events.Show]: void;
   [Events.Hidden]: void;
@@ -60,11 +50,8 @@ type TheTypesOfEvents = {
 };
 
 type ApplicationProps = {
-  view: RouteViewCore;
-  user: UserCore;
-  router: NavigatorCore;
-  routes: Record<PathnameKey, RouteConfig>;
-  views: Record<PathnameKey, RouteViewCore>;
+  $user: UserCore;
+  $history: HistoryCore;
   /**
    * 应用加载前的声明周期，只有返回 Result.Ok() 页面才会展示内容
    */
@@ -78,14 +65,7 @@ type ApplicationState = {
 export class Application extends BaseDomain<TheTypesOfEvents> {
   /** 用户 */
   user: UserCore;
-  /** 路由管理 */
-  router: NavigatorCore;
-  /** 路由配置 */
-  routes: Record<PathnameKey, RouteConfig>;
-  /** 根视图 */
-  view: RouteViewCore;
-  /** 加载的所有视图 */
-  views: Record<PathnameKey, RouteViewCore> = {};
+  history: HistoryCore;
 
   lifetimes: Pick<ApplicationProps, "beforeReady" | "onReady">;
 
@@ -112,16 +92,15 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
   constructor(props: ApplicationProps) {
     super();
 
-    const { view, user, router, routes, views = {}, beforeReady, onReady } = props;
+    const { $user: user, $history: history, beforeReady, onReady } = props;
+
+    this.user = user;
+    this.history = history;
+
     this.lifetimes = {
       beforeReady,
       onReady,
     };
-    this.view = view;
-    this.user = user;
-    this.router = router;
-    this.routes = routes;
-    this.views = views;
     // const { availHeight, availWidth } = window.screen;
     // if (window.navigator.userAgent.match(/iphone/i)) {
     //   const matched = [
@@ -157,131 +136,16 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
     // console.log("[]Application - before start");
     return Result.Ok(null);
   }
-  // prevViews: RouteViewCore[] = [];
-  // views: RouteViewCore[] = [];
-  // curView: RouteViewCore | null = null;
-  // showView(view: RouteViewCore, options: Partial<{ back: boolean }> = {}) {
-  //   console.log("[DOMAIN]Application - showView", view._name, view.parent);
-  //   if (options.back) {
-  //     if (!this.curView) {
-  //       // 异常行为
-  //       return;
-  //     }
-  //     if (!this.curView.parent) {
-  //       return;
-  //     }
-  //     this.curView.parent.uncoverPrevView();
-  //     return;
-  //   }
-  //   this.curView = view;
-  //   this.prevViews = this.views;
-  //   this.views = [];
-  //   const _show = (view: RouteViewCore) => {
-  //     if (view.parent) {
-  //       _show(view.parent);
-  //       (() => {
-  //         if (view.parent.canLayer) {
-  //           view.parent.layerSubView(view);
-  //           return;
-  //         }
-  //         view.parent.showSubView(view);
-  //       })();
-  //     }
-  //     view.show();
-  //     this.views.push(view);
-  //   };
-  //   _show(view);
-  //   // console.log("[DOMAIN]Application - after show", this.views);
-  // }
-  // back() {
-  //   history.back();
-  // }
-  push(pathname: string, query: Record<string, string> = {}) {
-    const uniqueKey = [pathname, query_stringify(query)].filter(Boolean).join("?");
-    if (uniqueKey === this.router.href) {
-      console.log("target url is", uniqueKey, "and cur href is", this.router.href);
-      return;
-    }
-    const view = this.views[uniqueKey];
-    if (view) {
-      this.findParent(view);
-      view.query = query;
-      if (!view.parent) {
-        console.log("1");
-        return;
-      }
-      this.router.href = uniqueKey;
-      view.parent.showSubView(view);
-      return;
-    }
-    const route = (() => {
-      const m = this.routes[pathname];
-      if (!m) {
-        return null;
-      }
-      return m;
-    })();
-    if (!route) {
-      console.log("2. no matched route");
-      return null;
-    }
-    const created = new RouteViewCore({
-      key: route.pathname,
-      destroyAfterHide: route.destroy,
-      title: route.title,
-      component: route.component,
-      query,
-      parent: null,
-    });
-    created.onUnmounted(() => {
-      delete this.views[uniqueKey];
-    });
-    this.views[uniqueKey] = created;
-    this.findParent(created);
-    if (!created.parent) {
-      console.log("3. ");
-      return;
-    }
-    this.router.href = uniqueKey;
-    created.parent.showSubView(created);
+  push(...args: Parameters<HistoryCore["push"]>) {
+    return this.history.push(...args);
   }
-  findParent(view: RouteViewCore) {
-    const { key } = view;
-    if (view.parent) {
-      if (view.parent.key === "/") {
-        return;
-      }
-      this.findParent(view.parent);
-      return;
-    }
-    const route = this.routes[key];
-    if (!route) {
-      return;
-    }
-    const { parent_pathname } = route;
-    if (this.views[parent_pathname]) {
-      view.parent = this.views[parent_pathname];
-      if (this.views[parent_pathname].key === "/") {
-        return;
-      }
-      this.findParent(this.views[parent_pathname]);
-      return;
-    }
-    const parent_route = this.routes[parent_pathname];
-    if (!parent_route) {
-      return null;
-    }
-    const created_parent = new RouteViewCore({
-      key: parent_route.pathname,
-      title: parent_route.title,
-      destroyAfterHide: parent_route.destroy,
-      component: parent_route.component,
-      parent: null,
-    });
-    this.views[parent_route.pathname] = created_parent;
-    view.parent = created_parent;
-    this.findParent(created_parent);
+  replace(...args: Parameters<HistoryCore["replace"]>) {
+    return this.history.replace(...args);
   }
+  back(...args: Parameters<HistoryCore["back"]>) {
+    return this.history.back(...args);
+  }
+
   /** 手机震动 */
   vibrate() {}
   setSize(size: { width: number; height: number }) {
@@ -350,9 +214,6 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
   }
   onHidden(handler: Handler<TheTypesOfEvents[Events.Hidden]>) {
     return this.on(Events.Hidden, handler);
-  }
-  onClickLink(handler: Handler<TheTypesOfEvents[Events.ClickLink]>) {
-    return this.on(Events.ClickLink, handler);
   }
   onKeydown(handler: Handler<TheTypesOfEvents[Events.Keydown]>) {
     return this.on(Events.Keydown, handler);

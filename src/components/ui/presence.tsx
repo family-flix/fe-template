@@ -38,7 +38,7 @@ export const Presence = (
         role="presentation"
         data-state={open() ? "open" : "closed"}
         onAnimationEnd={() => {
-          store.unmount();
+          store.destroy();
         }}
       >
         {props.children}

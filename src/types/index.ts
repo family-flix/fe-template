@@ -101,7 +101,7 @@ export type ListResponseWithCursor<T> = {
 export type RequestedResource<T extends (...args: any[]) => any> = UnpackedResult<Unpacked<ReturnType<T>>>;
 export type ViewComponentProps = {
   app: Application;
-  router: NavigatorCore;
+  // router: NavigatorCore;
   view: RouteViewCore;
   parent?: { scrollView?: ScrollViewCore };
 };

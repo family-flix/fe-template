@@ -19,7 +19,7 @@ export const HomeLayout: ViewComponent = (props) => {
   const [subViews, setSubViews] = createSignal(view.subViews);
 
   view.onSubViewsChange((nextSubViews) => {
-    console.log("[LAYOUT]home/layout - view.onSubViewsChange", nextSubViews);
+    // console.log("[LAYOUT]home/layout - view.onSubViewsChange", nextSubViews);
     setSubViews(nextSubViews);
   });
   // view.onCurViewChange((nextCurView) => {
@@ -120,7 +120,7 @@ export const HomeLayout: ViewComponent = (props) => {
                     store={subView}
                     index={i()}
                   >
-                    <PageContent app={app} router={app.router} view={subView} />
+                    <PageContent app={app} view={subView} />
                   </KeepAliveRouteView>
                 );
               }}

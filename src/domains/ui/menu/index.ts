@@ -166,19 +166,19 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
       }
       const subMenu = item.menu;
       subMenu.onShow(() => {
-        this.log("sub.onShow");
+        // this.log("sub.onShow");
         this.curSub = subMenu;
       });
       subMenu.onEnter(() => {
-        this.log("sub.onEnter");
+        // this.log("sub.onEnter");
         this.inSubMenu = true;
       });
       subMenu.onLeave(() => {
-        this.log("sub.onLeave");
+        // this.log("sub.onLeave");
         this.inSubMenu = false;
       });
       subMenu.onHide(() => {
-        this.log("sub.onHide");
+        // this.log("sub.onHide");
         this.curSub = null;
       });
       if (this.subs.includes(subMenu)) {
@@ -224,17 +224,17 @@ export class MenuCore extends BaseDomain<TheTypesOfEvents> {
       this.items[i].reset();
     }
   }
-  unmount() {
+  destroy() {
     // this.log("destroy", this.name);
-    super.unmount();
-    this.layer.unmount();
-    this.popper.unmount();
-    this.presence.unmount();
+    super.destroy();
+    this.layer.destroy();
+    this.popper.destroy();
+    this.presence.destroy();
     for (let i = 0; i < this.subs.length; i += 1) {
-      this.subs[i].unmount();
+      this.subs[i].destroy();
     }
     for (let i = 0; i < this.items.length; i += 1) {
-      this.items[i].unmount();
+      this.items[i].destroy();
     }
     this.reset();
   }

@@ -32,7 +32,6 @@ export function RouteView(
   store.onStateChange((nextState) => {
     setState(nextState);
   });
-  onCleanup(() => {});
 
   return (
     <Show when={state().mounted}>
