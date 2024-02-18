@@ -4,13 +4,13 @@
 import { For, Show, createSignal } from "solid-js";
 import { Brush, Edit, RotateCcw, Search, Trash } from "lucide-solid";
 
-import { ViewComponent } from "@/types";
+import { ViewComponent } from "@/store/types";
 
 export const UnknownSeasonListPage: ViewComponent = (props) => {
   const { app, view, parent } = props;
 
   view.onShow(() => {
-    console.log("[PAGE]unknown_media/season - view.onHidden");
+    console.log("[PAGE]unknown_media/season - view.onShow");
   });
   view.onHidden(() => {
     console.log("[PAGE]unknown_media/season - view.onHidden");

@@ -4,7 +4,7 @@
 import { Show, createSignal, onMount } from "solid-js";
 import { ArrowLeft, Calendar } from "lucide-solid";
 
-import { ViewComponent } from "@/types";
+import { ViewComponent } from "@/store/types";
 
 export const TaskProfilePage: ViewComponent = (props) => {
   const { app, view } = props;

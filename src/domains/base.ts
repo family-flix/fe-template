@@ -1,9 +1,7 @@
 /**
  * 注册的监听器
  */
-import { Result } from "@/types";
 import mitt, { EventType, Handler } from "mitt";
-// import { Log } from './log';
 
 let _uid = 0;
 function uid() {
@@ -62,7 +60,7 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     console.log(...texts);
     return texts;
   }
-  error(...args: unknown[]) {
+  errorTip(...args: unknown[]) {
     if (!this.debug) {
       return;
     }

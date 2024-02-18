@@ -3,134 +3,150 @@
  */
 // import { RouteViewCore, onViewCreated } from "@/domains/route_view";
 
-import { pages } from "@/pages";
-import { PathnameKey, RouteConfig } from "@/types";
+// import { pages } from "@/pages/index";
+// import { HomeLayout } from "@/pages/home/layout.tsx";
+// import { HomeIndexPage } from "@/pages/home/index.tsx";
+// import { HomeSeasonListPage } from "@/pages/season/index";
+// import { HomeSeasonProfilePage } from "@/pages/season/profile";
+// import { UnknownMediaLayout } from "@/pages/unknown_media/layout";
+// import { UnknownSeasonListPage } from "@/pages/unknown_media/season";
+// import { UnknownMovieListPage } from "@/pages/unknown_media/movie";
+// import { RegisterPage } from "@/pages/register/index";
+// import { LoginPage } from "@/pages/login/index";
+// import { NotFoundPage } from "@/pages/notfound/index";
 
-// export const pages: RouteViewCore[] = [];
-// onViewCreated((created) => {
-//   if (pages.includes(created)) {
-//     return;
-//   }
-//   pages.push(created);
-// });
-
-// export const homeIndexPage = new RouteViewCore({
-//   key: "/home/index",
-//   title: "首页",
-//   component: HomePage,
-// });
-// export const homeTaskProfilePage = new RouteViewCore({
-//   key: "/home/task_profile",
-//   title: "任务详情",
-//   // component: TaskProfilePage,
-//   component: TaskProfilePage,
-// });
-// export const homeTaskListPage = new RouteViewCore({
-//   key: "/home/task",
-//   title: "任务列表",
-//   // component: TaskListPage,
-//   component: TaskListPage,
-// });
-// export const homeTVProfilePage = new RouteViewCore({
-//   key: "/home/tv_profile",
-//   title: "电视剧详情",
-//   // component: TVProfilePage,
-//   component: HomeSeasonProfilePage,
-// });
-// export const homeSeasonListPage = new RouteViewCore({
-//   key: "/home/tv",
-//   title: "电视剧列表",
-//   component: HomeSeasonListPage,
-// });
-// export const homeUnknownTVPage = new RouteViewCore({
-//   key: "/home/unknown_media/season",
-//   title: "未识别的电视剧",
-//   component: UnknownSeasonListPage,
-// });
-// export const homeUnknownMoviePage = new RouteViewCore({
-//   key: "/home/unknown_media/movie",
-//   title: "未识别的电影",
-//   component: UnknownMovieListPage,
-// });
-// export const homeUnknownMediaLayout = new RouteViewCore({
-//   key: "/home/unknown_tv",
-//   title: "未识别影视剧",
-//   component: UnknownMediaLayout,
-//   children: [homeUnknownTVPage, homeUnknownMoviePage],
-// });
-// // homeUnknownMediaLayout.replaceSubViews([homeUnknownTVPage, homeUnknownSeasonPage, homeUnknownMoviePage]);
-
-// // export const homeLayout = new RouteViewCore({
-// //   key: "/home",
-// //   title: "首页",
-// //   component: HomeLayout,
-// //   children: [
-// //     homeIndexPage,
-// //     homeSeasonListPage,
-// //     homeTVProfilePage,
-// //     homeTaskListPage,
-// //     homeTaskProfilePage,
-// //     homeUnknownMediaLayout,
-// //   ],
-// // });
-// export const loginPage = new RouteViewCore({
-//   key: "/login",
-//   title: "登录",
-//   // component: LoginPage,
-//   component: LoginPage,
-// });
-// export const registerPage = new RouteViewCore({
-//   key: "/register",
-//   title: "注册",
-//   // component: RegisterPage,
-//   component: RegisterPage,
-// });
-// export const testPage = new RouteViewCore({
-//   key: "/test",
-//   title: "测试",
-//   // component: TestPage,
-//   component: TestPage,
-// });
-// export const rootView = new RouteViewCore({
-//   key: "/",
-//   title: "ROOT",
-//   component: "div",
-//   // layers: true,
-//   // children: [homeLayout, registerPage, loginPage, testPage],
-// });
-
-// const routes = [
-//   {
-//     path: '/',
-//   },
-// ];
-// export const pages = {
-//   HOME_LAYOUT: HomeLayout,
-//   HOME_INDEX_PAGE: HomeIndexPage,
-//   LOGIN_PAGE: LoginPage,
-// };
+const configure = {
+  root: {
+    title: "ROOT",
+    // name: "root",
+    pathname: "/",
+    component: "div",
+    children: {
+      home_layout: {
+        title: "首页布局",
+        // name: "home_layout",
+        pathname: "/home",
+        // component: HomeLayout,
+        children: {
+          home_index: {
+            title: "首页",
+            // name: "home_index",
+            pathname: "/home/index",
+            // component: HomeIndexPage,
+            children: {},
+          },
+          home_season: {
+            title: "电视剧列表",
+            // name: "home_season",
+            pathname: "/home/season",
+            // component: HomeSeasonListPage,
+            children: {},
+          },
+          home_season_profile: {
+            title: "电视剧详情",
+            // name: "home_season_profile",
+            pathname: "/home/season_profile",
+            // component: HomeSeasonProfilePage,
+            children: {},
+          },
+          home_unknown_media: {
+            title: "未识别影视剧",
+            // name: "home_unknown_media",
+            pathname: "/home/unknown_media",
+            // component: UnknownMediaLayout,
+            children: {
+              home_unknown_media_season: {
+                title: "未识别电视剧",
+                // name: "home_unknown_media_season",
+                pathname: "/home/unknown_media/season",
+                // component: UnknownSeasonListPage,
+                children: {},
+              },
+              home_unknown_media_movie: {
+                title: "未识别电影",
+                // name: "home_unknown_media_movie",
+                pathname: "/home/unknown_media/movie",
+                // component: UnknownMovieListPage,
+                children: {},
+              },
+            },
+          },
+        },
+      },
+      login: {
+        title: "管理员登录",
+        // name: "login",
+        pathname: "/login",
+        // component: LoginPage,
+        children: {},
+      },
+      register: {
+        title: "管理员注册",
+        // name: "register",
+        pathname: "/register",
+        // component: RegisterPage,
+        children: {},
+      },
+      notfound: {
+        title: "404",
+        // name: "notfound",
+        pathname: "/notfound",
+        // component: NotFoundPage,
+        children: {},
+      },
+    },
+  },
+};
+type PageKeysType<T extends OriginalRouteConfigure, K = keyof T> = K extends keyof T & (string | number)
+  ? `${K}` | (T[K] extends object ? `${K}.${PageKeysType<T[K]["children"]>}` : never)
+  : never;
+export type PageKeys = PageKeysType<typeof configure>;
+export type PathnameKey = string;
+export type RouteConfig = {
+  /** 使用该值定位唯一 route/page */
+  name: PageKeys;
+  title: string;
+  pathname: PathnameKey;
+  parent: {
+    name: string;
+  };
+  // component: unknown;
+};
 type OriginalRouteConfigure = Record<
   PathnameKey,
   {
     title: string;
-    destroy?: boolean;
-    children?: OriginalRouteConfigure;
-    component: unknown;
+    pathname: string;
+    children: OriginalRouteConfigure;
+    // component: unknown;
   }
 >;
-function apply(configure: OriginalRouteConfigure, parent: PathnameKey): RouteConfig[] {
-  const routes = Object.keys(configure).map((pathname) => {
-    const config = configure[pathname];
-    const { title, destroy, component, children } = config;
+function apply(
+  configure: OriginalRouteConfigure,
+  parent: {
+    pathname: PathnameKey;
+    name: string;
+  }
+): RouteConfig[] {
+  const routes = Object.keys(configure).map((key) => {
+    const config = configure[key];
+    const { title, pathname, children } = config;
+    // 一个 hack 操作，过滤掉 root
+    const name = [parent.name, key].filter(Boolean).join(".") as PageKeys;
     if (children) {
-      const subRoutes = apply(children, pathname);
+      const subRoutes = apply(children, {
+        name,
+        pathname,
+      });
       return [
         {
           title,
-          destroy,
+          name,
           pathname,
-          component,
-          parent_pathname: parent,
+          // component,
+          parent: {
+            name: parent.name,
+          },
         },
         ...subRoutes,
       ];
@@ -138,10 +154,12 @@ function apply(configure: OriginalRouteConfigure, parent: PathnameKey): RouteCon
     return [
       {
         title,
-        destroy,
+        name,
         pathname,
-        component,
-        parent_pathname: parent,
+        // component,
+        parent: {
+          name: parent.name,
+        },
       },
     ];
   });
@@ -149,61 +167,23 @@ function apply(configure: OriginalRouteConfigure, parent: PathnameKey): RouteCon
     return a.concat(b);
   }, []);
 }
-const configure: OriginalRouteConfigure = {
-  "/": {
-    title: "ROOT",
-    component: "div",
-    children: {
-      "/home": {
-        title: "首页布局",
-        component: pages.HOME_LAYOUT,
-        children: {
-          "/home/index": {
-            title: "首页",
-            component: pages.HOME_INDEX_PAGE,
-          },
-          "/home/season": {
-            title: "电视剧列表",
-            component: pages.HOME_SEASON_LIST_PAGE,
-          },
-          "/home/season_profile": {
-            title: "电视剧详情",
-            destroy: true,
-            component: pages.HOME_SEASON_PROFILE_PAGE,
-          },
-          "/home/unknown_media": {
-            title: "未识别影视剧",
-            component: pages.HOME_UNKNOWN_MEDIA_LAYOUT,
-            children: {
-              "/home/unknown_media/season": {
-                title: "未识别电视剧",
-                component: pages.HOME_UNKNOWN_MEDIA_SEASON_PAGE,
-              },
-              "/home/unknown_media/movie": {
-                title: "未识别电影",
-                component: pages.HOME_UNKNOWN_MEDIA_MOVIE_PAGE,
-              },
-            },
-          },
-        },
-      },
-      "/login": {
-        title: "管理员登录",
-        component: pages.LOGIN_PAGE,
-      },
-      "/register": {
-        title: "管理员注册",
-        component: pages.REGISTER_PAGE,
-      },
-      "/notfound": {
-        title: "404",
-        component: pages.NOT_FOUND_PAGE,
-      },
-    },
-  },
-};
-const configs = apply(configure, "/");
+const configs = apply(configure, {
+  name: "",
+  pathname: "/",
+});
 export const routes: Record<PathnameKey, RouteConfig> = configs
+  .map((a) => {
+    return {
+      [a.name]: a,
+    };
+  })
+  .reduce((a, b) => {
+    return {
+      ...a,
+      ...b,
+    };
+  }, {});
+export const routesWithPathname: Record<PathnameKey, RouteConfig> = configs
   .map((a) => {
     return {
       [a.pathname]: a,
@@ -217,22 +197,22 @@ export const routes: Record<PathnameKey, RouteConfig> = configs
   }, {});
 // @ts-ignore
 window.__routes__ = routes;
-
-export function find_route(pathname: PathnameKey) {
-  const matched = routes[pathname];
-  if (!matched) {
-    return {
-      key: "/notfound",
-      title: "404",
-      component: pages.NOT_FOUND_PAGE,
-      parent_pathname: "/",
-    };
-  }
-  return {
-    key: matched.pathname,
-    title: matched.title,
-    component: matched.component,
-    destroyAfterHide: matched.destroy,
-    parent_pathname: matched.parent_pathname,
-  };
-}
+// configs.home_layout.parent_pathname
+// export function find_route(pathname: PathnameKey) {
+//   const matched = routes[pathname];
+//   if (!matched) {
+//     return {
+//       key: "/notfound",
+//       title: "404",
+//       component: NotFoundPage,
+//       parent_pathname: "/",
+//     };
+//   }
+//   return {
+//     key: matched.pathname,
+//     title: matched.title,
+//     component: matched.component,
+//     destroyAfterHide: matched.destroy,
+//     parent_pathname: matched.parent_pathname,
+//   };
+// }

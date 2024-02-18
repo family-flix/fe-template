@@ -1,14 +1,20 @@
-import { HistoryCore } from "@/domains/history";
 import { ArrowUp } from "lucide-solid";
 import { For, Show, createSignal } from "solid-js";
 
-export const HistoryPanel = (props: { store: HistoryCore }) => {
+import { PageKeys } from "@/store/routes";
+import { HistoryCore } from "@/domains/history";
+
+export const HistoryPanel = (props: { store: HistoryCore<string, any> }) => {
   const { store } = props;
 
   const [state, setState] = createSignal(store.state);
+  const [histories, setHistories] = createSignal(store.$router.histories);
 
   store.onStateChange((v) => {
     setState(v);
+  });
+  store.$router.onHistoriesChange((v) => {
+    setHistories(v);
   });
 
   return (
@@ -44,7 +50,14 @@ export const HistoryPanel = (props: { store: HistoryCore }) => {
             </For>
           </div>
         </div>
-        <div>{state().cursor}</div>
+        <div class="mt-4 flex items-center space-x-4">
+          <For each={histories()}>
+            {(history, index) => {
+              const { pathname } = history;
+              return <div>{pathname}</div>;
+            }}
+          </For>
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { For, JSX, Show, createSignal } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { Ban, CheckCircle, Timer } from "lucide-solid";
 
-import { ViewComponent } from "@/types";
+import { ViewComponent } from "@/store/types";
 
 export const TaskListPage: ViewComponent = (props) => {
   const { app, view } = props;

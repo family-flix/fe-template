@@ -2,18 +2,20 @@
  * @file 后台/首页布局
  */
 import { For, JSX, createSignal, onMount } from "solid-js";
-import { Home, EyeOff, Tv, LogOut, Settings } from "lucide-solid";
+import { Home, EyeOff, Tv, LogOut, Settings, Sparkles } from "lucide-solid";
 
+import { PageKeys } from "@/store/routes";
 import { DropdownMenu, KeepAliveRouteView } from "@/components/ui";
 import { DropdownMenuCore, MenuItemCore } from "@/domains/ui";
 // import { RouteViewCore } from "@/domains/route_view";
 // import { Application } from "@/domains/app";
 // import { Show } from "@/packages/ui/show";
-import { ViewComponent } from "@/types";
+import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { cn } from "@/utils";
+import { pages } from "@/store/views";
 
 export const HomeLayout: ViewComponent = (props) => {
-  const { app, view } = props;
+  const { app, history, view } = props;
 
   // const [curSubView, setCurSubView] = createSignal(view.curView);
   const [subViews, setSubViews] = createSignal(view.subViews);
@@ -37,7 +39,7 @@ export const HomeLayout: ViewComponent = (props) => {
         label: "退出登录",
         icon: <LogOut class="w-4 h-4" />,
         onClick() {
-          app.push("/login");
+          history.push("root.login");
           userMenu.hide();
         },
       }),
@@ -49,21 +51,21 @@ export const HomeLayout: ViewComponent = (props) => {
       text: "首页",
       icon: <Home class="w-6 h-6" />,
       onClick() {
-        app.push("/home/index");
+        history.push("root.home_layout.home_index");
       },
     },
     {
       text: "电视剧",
       icon: <Tv class="w-6 h-6" />,
       onClick() {
-        app.push("/home/season");
+        history.push("root.home_layout.home_season");
       },
     },
     {
-      text: "解析结果",
-      icon: <EyeOff class="w-6 h-6" />,
+      text: "刮削结果",
+      icon: <Sparkles class="w-6 h-6" />,
       onClick() {
-        app.push("/home/unknown_media/season");
+        history.push("root.home_layout.home_unknown_media.home_unknown_media_movie");
       },
     },
   ]);
@@ -109,7 +111,8 @@ export const HomeLayout: ViewComponent = (props) => {
           <div class="relative w-full h-full">
             <For each={subViews()}>
               {(subView, i) => {
-                const PageContent = subView.component as ViewComponent;
+                const routeName = subView.name;
+                const PageContent = pages[routeName as Exclude<PageKeys, "root">];
                 return (
                   <KeepAliveRouteView
                     class={cn(
@@ -120,7 +123,7 @@ export const HomeLayout: ViewComponent = (props) => {
                     store={subView}
                     index={i()}
                   >
-                    <PageContent app={app} view={subView} />
+                    <PageContent app={app} history={history} view={subView} />
                   </KeepAliveRouteView>
                 );
               }}

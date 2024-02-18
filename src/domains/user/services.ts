@@ -1,22 +1,24 @@
-import { Result } from "@/types";
-import { request } from "@/store";
+import { prepare } from "@/domains/request_v2/utils";
 
 /**
  * 用户登录
  * @param body
  * @returns
  */
-export async function login(body: { email: string; password: string }) {
-  return request.post<{
-    id: string;
-    username: string;
-    // name: string;
-    // email: string;
-    avatar: string;
-    verified: string;
-    // created: string;
-    token: string;
-  }>("/api/admin/user/login", body);
+export function login() {
+  return prepare<
+    { email: string; password: string },
+    {
+      id: string;
+      username: string;
+      // name: string;
+      // email: string;
+      avatar: string;
+      verified: string;
+      // created: string;
+      token: string;
+    }
+  >({ url: "/api/admin/user/login" });
 }
 
 /**
@@ -24,42 +26,41 @@ export async function login(body: { email: string; password: string }) {
  * @param body
  * @returns
  */
-export async function register(body: { email: string; password: string }) {
-  return request.post<{
-    id: string;
-    username: string;
-    // name: string;
-    // email: string;
-    avatar: string;
-    verified: string;
-    // created: string;
-    token: string;
-  }>("/api/admin/user/register", body);
+export function register() {
+  return prepare<
+    { email: string; password: string },
+    {
+      id: string;
+      username: string;
+      // name: string;
+      // email: string;
+      avatar: string;
+      verified: string;
+      // created: string;
+      token: string;
+    }
+  >({ url: "/api/admin/user/register" });
 }
 
-export async function logout(body: { email: string; password: string }) {
-  return await request.post("/api/admin/user/logout", body);
+export function logout() {
+  return prepare<{ email: string; password: string }, void>({ url: "/api/admin/user/logout", method: "POST" });
 }
 
-export async function get_token() {
-  return await request.post("/api/token", {});
+export function get_token() {
+  return prepare({ url: "/api/token" });
 }
 
 /**
  * 获取当前登录用户信息详情
  * @returns
  */
-export async function fetch_user_profile() {
-  return request.get("/api/admin/user/profile");
+export function fetch_user_profile() {
+  return prepare({ url: "/api/admin/user/profile" });
 }
 
 /**
  * 成员通过授权链接访问首页时，验证该链接是否有效
  */
-export async function validate(token: string) {
-  const r = await request.post<{ token: string }>("/api/admin/user/validate", { token });
-  if (r.error) {
-    return Result.Err(r.error);
-  }
-  return Result.Ok(r.data);
+export function validate() {
+  return prepare<{ token: string }, { token: string }>({ url: "/api/admin/user/validate" });
 }

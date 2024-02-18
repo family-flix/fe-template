@@ -3,14 +3,14 @@
  */
 import { Button } from "@/components/ui";
 import { ButtonCore } from "@/domains/ui";
-import { ViewComponent } from "@/types";
+import { ViewComponent } from "@/store/types";
 
 export const LoginPage: ViewComponent = (props) => {
-  const { app, view } = props;
+  const { app, history, view } = props;
 
   const $btn = new ButtonCore({
     onClick() {
-      app.push("/home/index");
+      history.push("root.home_layout.home_index");
     },
   });
 

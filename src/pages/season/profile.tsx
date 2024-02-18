@@ -4,10 +4,10 @@
 import { createSignal, For, onCleanup, Show } from "solid-js";
 import { ArrowLeft } from "lucide-solid";
 
-import { ViewComponent } from "@/types";
+import { ViewComponent } from "@/store/types";
 
 export const HomeSeasonProfilePage: ViewComponent = (props) => {
-  const { app, view } = props;
+  const { app, history, view } = props;
   let title: undefined | HTMLDivElement;
 
   view.onMounted(() => {
@@ -35,7 +35,7 @@ export const HomeSeasonProfilePage: ViewComponent = (props) => {
           <h1 class="flex items-center space-x-2 text-2xl cursor-pointer">
             <div
               onClick={() => {
-                app.back();
+                history.back();
               }}
             >
               <ArrowLeft class="w-6 h-6" />
@@ -53,21 +53,21 @@ export const HomeSeasonProfilePage: ViewComponent = (props) => {
           <div class="mt-4">
             <div
               onClick={() => {
-                app.replace("/home/season_profile", { id: "1", title: "精通 JavaScript" });
+                history.replace("root.home_layout.home_season_profile", { id: "1", title: "精通 JavaScript" });
               }}
             >
               精通 JavaScript
             </div>
             <div
               onClick={() => {
-                app.replace("/home/season_profile", { id: "2", title: "JavaScript 权威指南" });
+                history.replace("root.home_layout.home_season_profile", { id: "2", title: "JavaScript 权威指南" });
               }}
             >
               JavaScript 权威指南
             </div>
             <div
               onClick={() => {
-                app.replace("/home/season_profile", { id: "3", title: "精通 React" });
+                history.replace("root.home_layout.home_season_profile", { id: "3", title: "精通 React" });
               }}
             >
               精通 React

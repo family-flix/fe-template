@@ -4,12 +4,12 @@
 import { createSignal, For, Show } from "solid-js";
 import { ArrowLeft } from "lucide-solid";
 
-import { ViewComponent } from "@/types";
+import { ViewComponent } from "@/store/types";
 import { Button, Input } from "@/components/ui";
 import { ButtonCore, InputCore } from "@/domains/ui";
 
 export const HomeSeasonListPage: ViewComponent = (props) => {
-  const { app, view } = props;
+  const { app, history, view } = props;
 
   // const [driveResponse, setDriveResponse] = createSignal(driveList.response);
   const $input = new InputCore({
@@ -32,7 +32,7 @@ export const HomeSeasonListPage: ViewComponent = (props) => {
           <h1 class="flex items-center space-x-2 text-2xl cursor-pointer">
             <div
               onClick={() => {
-                app.back();
+                history.back();
               }}
             >
               <ArrowLeft class="w-6 h-6" />
@@ -49,22 +49,36 @@ export const HomeSeasonListPage: ViewComponent = (props) => {
           <div class="mt-4 space-y-2">
             <div
               class="p-4 rounded-md border bg-white cursor-pointer"
-              onClick={() => {
-                app.push("/home/season_profile", { id: "1", title: "精通 JavaScript" });
-              }}
+              // onClick={() => {
+              //   history.push("root.home_layout.home_season_profile", { id: "1", title: "精通 JavaScript" });
+              // }}
             >
               <div>
-                <div>精通 JavaScript</div>
+                <a
+                  href={history.buildURLWithPrefix("root.home_layout.home_season_profile", {
+                    id: "1",
+                    title: "精通 JavaScript",
+                  })}
+                >
+                  精通 JavaScript
+                </a>
               </div>
             </div>
             <div
               class="p-4 rounded-md border bg-white cursor-pointer"
-              onClick={() => {
-                app.push("/home/season_profile", { id: "2", title: "JavaScript 权威指南" });
-              }}
+              // onClick={() => {
+              //   history.push("root.home_layout.home_season_profile", { id: "2", title: "JavaScript 权威指南" });
+              // }}
             >
               <div>
-                <div>JavaScript 权威指南</div>
+                <a
+                  href={history.buildURLWithPrefix("root.home_layout.home_season_profile", {
+                    id: "2",
+                    title: "JavaScript 权威指南",
+                  })}
+                >
+                  JavaScript 权威指南
+                </a>
               </div>
             </div>
           </div>

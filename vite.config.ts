@@ -9,7 +9,19 @@ const config = defineConfig(({ mode }) => {
     define: {
       PATHNAME_PREFIX: [""],
     },
-    plugins: [solidPlugin()],
+    plugins: [
+      solidPlugin(),
+      {
+        name: "singleHMR",
+        handleHotUpdate({ modules }) {
+          modules.map((m) => {
+            m.importedModules = new Set();
+            m.importers = new Set();
+          });
+          return modules;
+        },
+      },
+    ],
     resolve: {
       alias: {
         "hls.js": "hls.js/dist/hls.min.js",

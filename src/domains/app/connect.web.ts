@@ -43,12 +43,6 @@ export function connect(app: Application) {
   window.addEventListener("load", () => {
     // console.log("2");
   });
-  window.addEventListener("popstate", (event) => {
-    console.log("[DOMAIN]Application connect popstate", event.state?.from, event.state?.to);
-    const { type } = event;
-    const { pathname, href } = window.location;
-    app.emit(app.Events.PopState, { type, href, pathname: event.state?.to });
-  });
   window.addEventListener("beforeunload", (event) => {
     // // 取消事件
     // event.preventDefault();
@@ -101,45 +95,6 @@ export function connect(app: Application) {
     const { key } = event;
     app.keydown({ key });
   });
-  // ownerDocument.addEventListener("click", (event) => {
-  //   // console.log('[DOMAIN]app/connect.web', event.target);
-  //   let target = event.target;
-  //   if (target instanceof Document) {
-  //     return;
-  //   }
-  //   if (target === null) {
-  //     return;
-  //   }
-  //   let matched = false;
-  //   while (target) {
-  //     const t = target as HTMLElement;
-  //     if (t.tagName === "A") {
-  //       matched = true;
-  //       break;
-  //     }
-  //     target = t.parentNode;
-  //   }
-  //   if (!matched) {
-  //     return;
-  //   }
-  //   const t = target as HTMLElement;
-  //   const href = t.getAttribute("href");
-  //   console.log("[CORE]app/connect - link a", href);
-  //   if (!href) {
-  //     return;
-  //   }
-  //   if (!href.startsWith("/")) {
-  //     return;
-  //   }
-  //   if (href.startsWith("http")) {
-  //     return;
-  //   }
-  //   if (t.getAttribute("target") === "_blank") {
-  //     return;
-  //   }
-  //   event.preventDefault();
-  //   app.emit(app.Events.ClickLink, { href, target: null });
-  // });
   const originalBodyPointerEvents = ownerDocument.body.style.pointerEvents;
   app.disablePointer = () => {
     ownerDocument.body.style.pointerEvents = "none";

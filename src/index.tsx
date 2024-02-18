@@ -3,63 +3,83 @@ import { createSignal, For, JSX, onMount, Show } from "solid-js";
 import { render } from "solid-js/web";
 import { Loader2 } from "lucide-solid";
 
-import { app } from "./store";
+import { app, history } from "./store/index";
+import { PageKeys, routesWithPathname } from "./store/routes";
+import { pages } from "./store/views";
 import { Toast } from "./components/ui/toast";
 import { KeepAliveRouteView } from "./components/ui";
+import { HistoryPanel } from "./components/history-panel";
 import { connect as connectApplication } from "./domains/app/connect.web";
 import { connect as connectHistory } from "./domains/history/connect.web";
 import { ToastCore } from "./domains/ui/toast";
 import { NavigatorCore } from "./domains/navigator";
-import { ViewComponent } from "./types";
-import { sleep } from "./utils";
 
 import "./style.css";
-import { HistoryPanel } from "./components/history-panel";
 
-// app.onClickLink(({ href, target }) => {
-// const { pathname, query } = NavigatorCore.parse(href);
-// const matched = pages.find((v) => {
-//   return v.key === pathname;
-// });
-// if (!matched) {
-//   app.tip({
-//     text: ["没有匹配的页面"],
-//   });
-//   return;
-// }
-// matched.query = query as Record<string, string>;
-// if (target === "_blank") {
-//   matched.buildUrlWithPrefix(matched.query);
-//   return;
-// }
-// app.showView(matched);
-// return;
-// });
-app.onPopState((options) => {
-  const { pathname } = NavigatorCore.parse(options.pathname);
-  console.log("[ROOT]index - app.onPopState", options.type, pathname);
-  // const matched = pages.find((v) => {
-  //   return v.key === pathname;
-  // });
-  // if (matched) {
-  //   matched.isShowForBack = true;
-  //   matched.query = router.query;
-  //   app.showView(matched, { back: true });
-  //   return;
-  // }
-  // homeIndexPage.isShowForBack = true;
-  // app.showView(homeIndexPage, { back: true });
+history.onClickLink(({ href, target }) => {
+  const { pathname, query } = NavigatorCore.parse(href);
+  const route = routesWithPathname[pathname];
+  // console.log("[ROOT]history.onClickLink", pathname, query, route);
+  if (!route) {
+    app.tip({
+      text: ["没有匹配的页面"],
+    });
+    return;
+  }
+  if (target === "_blank") {
+    const u = history.buildURLWithPrefix(route.name, query);
+    window.open(u);
+    return;
+  }
+  history.push(route.name, query);
+  return;
+});
+// 每次都响应 back，但是如果 back to pathname 一样，其实就和跳转一个相同的地址一样，可以直接忽略掉
+// 但是在 详情A 返回，我的记录里面是没有 Home，却实际可以返回到 Home，这怎么处理？
+// 完全可以忽略什么历史，和 React Router 一样，我就响应 href 改变，它匹配到什么路由，就渲染什么路由
+// 在视图上，返回时，提前在 views 插入返回时匹配的 view，在视觉上，就能和正常返回一样了
+history.$router.onPopState((r) => {
+  const { type, pathname, href } = r;
+  console.log("[ROOT]index - app.onPopState", type, pathname, href);
+  if (type === "back") {
+    history.back();
+    return;
+  }
+  if (type === "forward") {
+    history.forward();
+    return;
+  }
+});
+history.$router.onPushState(({ from, to, path, pathname }) => {
+  console.log("[ROOT]index - before history.pushState", from, to, path, pathname);
+  window.history.pushState(
+    {
+      from,
+      to,
+    },
+    "",
+    path
+  );
+});
+history.$router.onReplaceState(({ from, path, pathname }) => {
+  console.log("[ROOT]index - before history.replaceState", from, path, pathname);
+  window.history.replaceState(
+    {
+      from,
+    },
+    "",
+    path
+  );
 });
 // @ts-ignore
 window.__APP = app;
 connectApplication(app);
-connectHistory(app.history);
+connectHistory(history);
 
 function Application() {
   const toast = new ToastCore();
 
-  const view = app.history.$view;
-  const router = app.history.$router;
+  const view = history.$view;
   // console.log("[ROOT]sub views", rootView.subViews);
 
   const [state, setState] = createSignal(app.state);
@@ -68,31 +88,29 @@ function Application() {
   app.onStateChange((nextState) => {
     setState(nextState);
   });
-  // app.onViewShow((views) => {
-  // const curView = views.pop();
-  // if (!curView) {
-  //   return;
-  // }
-  // if (curView.isShowForBack) {
-  //   curView.isShowForBack = false;
-  //   return;
-  // }
-  // const r = curView.buildUrl(curView.query);
-  // app.setTitle(`${curView.title} - FamilyFlix`);
-  // router.pushState(r);
-  // });
   view.onSubViewsChange((nextSubViews) => {
     console.log("[ROOT]rootView.onSubViewsChange", nextSubViews.length);
     setSubViews(nextSubViews);
+  });
+  history.onRouteChange(({ ignore, reason, view, href }) => {
+    console.log("[ROOT]rootView.onRouteChange", href);
+    const { title } = view;
+    app.setTitle(title);
+    if (ignore) {
+      return;
+    }
+    if (reason === "push") {
+      history.$router.pushState(href);
+    }
+    if (reason === "replace") {
+      history.$router.replaceState(href);
+    }
   });
   app.onTip((msg) => {
     const { text } = msg;
     toast.show({
       texts: text,
     });
-  });
-  app.history.onTopViewChange((view) => {
-    app.setTitle(view.title);
   });
   app.onError((error) => {
     // 处理各种错误？
@@ -101,23 +119,22 @@ function Application() {
   //   router.start();
   // });
   onMount(async () => {
-    app.push("/home/index");
+    const { pathname, query } = history.$router;
+    console.log("[ROOT]onMount", pathname);
+    const route = routesWithPathname[pathname];
+    if (!route) {
+      history.push("root.home_layout.home_index");
+      return;
+    }
+    if (route.name === "root") {
+      history.push("root.home_layout.home_index", query, { ignore: true });
+      return;
+    }
+    history.push(route.name, query, { ignore: true });
   });
   // console.log("[]Application - before start", window.history);
   const { innerWidth, innerHeight, location } = window;
-  router.prepare(location);
-  (() => {
-    // const { pathname } = NavigatorCore.parse(router.pathname);
-    // const matched = pages.find((v) => {
-    //   return v.key === pathname;
-    // });
-    // if (matched) {
-    //   matched.query = router.query;
-    //   app.showView(matched);
-    //   return;
-    // }
-    // app.showView(homeIndexPage);
-  })();
+  history.$router.prepare(location);
   app.start({
     width: innerWidth,
     height: innerHeight,
@@ -128,18 +145,19 @@ function Application() {
       <Show when={subViews().length !== 0}>
         <For each={subViews()}>
           {(subView, i) => {
-            const PageContent = subView.component as ViewComponent;
+            const routeName = subView.name;
+            const PageContent = pages[routeName as Exclude<PageKeys, "root">];
             return (
               <KeepAliveRouteView class="absolute inset-0 opacity-100 dark:bg-black" store={subView} index={i()}>
-                <div class="absolute right-2 bottom-2">{subView.title}</div>
-                <PageContent app={app} view={subView} />
+                {/* <div class="absolute right-2 bottom-2">{subView.title}</div> */}
+                <PageContent app={app} history={history} view={subView} />
               </KeepAliveRouteView>
             );
           }}
         </For>
       </Show>
       <Toast store={toast} />
-      <HistoryPanel store={app.history} />
+      <HistoryPanel store={history} />
     </div>
   );
 }

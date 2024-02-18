@@ -2,46 +2,41 @@
  * @file 应用实例，也可以看作启动入口，优先会执行这里的代码
  * 应该在这里进行一些初始化操作、全局状态或变量的声明
  */
-import { ListCore } from "@/domains/list";
-import { Application } from "@/domains/app";
-import { HistoryCore } from "@/domains/history";
-import { NavigatorCore } from "@/domains/navigator";
-import { RouteViewCore, onViewCreated } from "@/domains/route_view";
-import { HttpClientCore } from "@/domains/http_client";
-import { BizError } from "@/domains/error";
-import { Result } from "@/types";
+import { ListCore } from "@/domains/list/index";
+import { Application } from "@/domains/app/index";
+import { HistoryCore } from "@/domains/history/index";
+import { NavigatorCore } from "@/domains/navigator/index";
+import { RouteViewCore } from "@/domains/route_view/index";
+import { BizError } from "@/domains/error/index";
+import { Result } from "@/types/index";
 
-import { cache } from "./cache";
 import { user } from "./user";
-import { routes } from "./routes";
+import { cache } from "./cache";
+import { PageKeys, RouteConfig, routes } from "./routes";
 
 NavigatorCore.prefix = PATHNAME_PREFIX;
 
-// const views: Record<string, RouteViewCore> = {};
-// onViewCreated((view) => {
-//   views[view.key] = view;
-// });
-
 const router = new NavigatorCore();
 const view = new RouteViewCore({
-  key: "/",
+  name: "root" as PageKeys,
+  pathname: "/",
   title: "ROOT",
-  component: "div",
   visible: true,
   parent: null,
   views: [],
 });
-const history = new HistoryCore({
+export const history = new HistoryCore<PageKeys, RouteConfig>({
   view,
   router,
   routes,
   views: {
-    "/": view,
-  },
+    root: view,
+  } as Record<PageKeys, RouteViewCore>,
 });
+// @ts-ignore
+window.__history__ = history;
 export const app = new Application({
-  $user: user,
-  $history: history,
+  user,
   async beforeReady() {
     if (!user.isLogin) {
       // const r = await has_admin();
@@ -58,13 +53,9 @@ export const app = new Application({
       // rootView.showSubView(loginPage);
       return Result.Ok(null);
     }
-    await app.user.validate();
+    await app.$user.validate();
     return Result.Ok(null);
   },
-});
-export const request = new HttpClientCore({
-  app,
-  user,
 });
 user.onTip((msg) => {
   app.tip(msg);

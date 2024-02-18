@@ -2,17 +2,19 @@
  * @file 索引后没有找到匹配信息的电视剧（后面称为「未知电视剧」）
  */
 import { createSignal, For, onMount, Show } from "solid-js";
-import { ArrowLeft } from "lucide-solid";
+import { ArrowLeft, Sparkles } from "lucide-solid";
 
+import { ViewComponent } from "@/store/types";
+import { pages } from "@/store/views";
+import { PageKeys } from "@/store/routes";
 import { ButtonCore, ScrollViewCore } from "@/domains/ui";
 import { ScrollView, KeepAliveRouteView } from "@/components/ui";
 import { TabHeader } from "@/components/ui/tab-header";
 import { TabHeaderCore } from "@/domains/ui/tab-header";
-import { ViewComponent } from "@/types";
 import { cn } from "@/utils";
 
 export const UnknownMediaLayout: ViewComponent = (props) => {
-  const { app, view } = props;
+  const { app, history, view } = props;
 
   const scrollView = new ScrollViewCore({
     _name: "unknown_media/layout",
@@ -21,37 +23,33 @@ export const UnknownMediaLayout: ViewComponent = (props) => {
     key: "id",
     options: [
       {
-        id: "season",
+        id: "root.home_layout.home_unknown_media.home_unknown_media_season" as PageKeys,
         text: "电视剧",
       },
       {
-        id: "movie",
+        id: "root.home_layout.home_unknown_media.home_unknown_media_movie" as PageKeys,
         text: "电影",
       },
     ],
     onChange(opt) {
-      console.log(opt);
-      if (opt.value === "season") {
-        app.push("/home/unknown_media/season");
-        return;
-      }
-      if (opt.value === "movie") {
-        app.push("/home/unknown_media/movie");
-      }
+      history.push(opt.value as PageKeys);
     },
     onMounted() {
-      // if (view.curView === homeUnknownTVPage) {
-      //   tab.select(0);
-      // }
-      // if (view.curView === homeUnknownMoviePage) {
-      //   tab.select(2);
-      // }
+      // console.log("[LAYOUT]unknown_media - tab.onMounted", history.$router.name);
+      tab.handleChangeById(history.$router.name);
     },
   });
 
   const [curSubView, setCurSubView] = createSignal(view.curView);
   const [subViews, setSubViews] = createSignal(view.subViews);
 
+  history.onRouteChange((v) => {
+    console.log("[LAYOUT]unknown_media - app.history.onRouteChange", v.pathname);
+    if (!tab.mounted) {
+      return;
+    }
+    tab.handleChangeById(v.name);
+  });
   view.onCurViewChange((nextCurView) => {
     setCurSubView(nextCurView);
   });
@@ -66,12 +64,12 @@ export const UnknownMediaLayout: ViewComponent = (props) => {
           <h1 class="flex items-center space-x-2 text-2xl cursor-pointer">
             <div
               onClick={() => {
-                app.back();
+                history.back();
               }}
             >
-              <ArrowLeft class="w-6 h-6" />
+              <Sparkles class="w-6 h-6" />
             </div>
-            <div>解析结果</div>
+            <div>刮削结果</div>
           </h1>
           <div class="mt-8">
             <TabHeader store={tab} />
@@ -89,7 +87,8 @@ export const UnknownMediaLayout: ViewComponent = (props) => {
             >
               <For each={subViews()}>
                 {(subView, i) => {
-                  const PageContent = subView.component as ViewComponent;
+                  const routeName = subView.name;
+                  const PageContent = pages[routeName as Exclude<PageKeys, "root">];
                   return (
                     <KeepAliveRouteView
                       class={cn("relative w-full h-full")}
@@ -99,10 +98,11 @@ export const UnknownMediaLayout: ViewComponent = (props) => {
                     >
                       <PageContent
                         app={app}
+                        history={history}
                         parent={{
                           scrollView,
                         }}
-                        view={view}
+                        view={subView}
                       />
                     </KeepAliveRouteView>
                   );

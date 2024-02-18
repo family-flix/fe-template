@@ -1,20 +1,4 @@
-import { JSX } from "solid-js/jsx-runtime";
-
-import { Application } from "@/domains/app";
-import { NavigatorCore } from "@/domains/navigator";
-import { RouteViewCore } from "@/domains/route_view";
 import { BizError } from "@/domains/error";
-import { ScrollViewCore } from "@/domains/ui";
-
-export type PathnameKey = string;
-export type RouteConfig = {
-  title: string;
-  /** 组件隐藏后销毁 */
-  destroy?: boolean;
-  pathname: PathnameKey;
-  parent_pathname: PathnameKey;
-  component: unknown;
-};
 
 export type Resp<T> = {
   data: T extends null ? null : T;
@@ -99,13 +83,7 @@ export type ListResponseWithCursor<T> = {
 };
 
 export type RequestedResource<T extends (...args: any[]) => any> = UnpackedResult<Unpacked<ReturnType<T>>>;
-export type ViewComponentProps = {
-  app: Application;
-  // router: NavigatorCore;
-  view: RouteViewCore;
-  parent?: { scrollView?: ScrollViewCore };
-};
-export type ViewComponent = (props: ViewComponentProps) => JSX.Element;
+export type Shift<T extends any[]> = ((...args: T) => void) extends (arg1: any, ...rest: infer R) => void ? R : never;
 
 export type Rect = {
   width: number;
