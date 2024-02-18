@@ -34,13 +34,9 @@ history.onClickLink(({ href, target }) => {
   history.push(route.name, query);
   return;
 });
-// 每次都响应 back，但是如果 back to pathname 一样，其实就和跳转一个相同的地址一样，可以直接忽略掉
-// 但是在 详情A 返回，我的记录里面是没有 Home，却实际可以返回到 Home，这怎么处理？
-// 完全可以忽略什么历史，和 React Router 一样，我就响应 href 改变，它匹配到什么路由，就渲染什么路由
-// 在视图上，返回时，提前在 views 插入返回时匹配的 view，在视觉上，就能和正常返回一样了
 history.$router.onPopState((r) => {
   const { type, pathname, href } = r;
-  console.log("[ROOT]index - app.onPopState", type, pathname, href);
+  // console.log("[ROOT]index - app.onPopState", type, pathname, href);
   if (type === "back") {
     history.back();
     return;
@@ -71,8 +67,6 @@ history.$router.onReplaceState(({ from, path, pathname }) => {
     path
   );
 });
-// @ts-ignore
-window.__APP = app;
 connectApplication(app);
 connectHistory(history);
 

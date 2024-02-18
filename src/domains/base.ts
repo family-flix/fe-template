@@ -4,7 +4,7 @@
 import mitt, { EventType, Handler } from "mitt";
 
 let _uid = 0;
-function uid() {
+export function uid() {
   _uid += 1;
   return _uid;
 }
@@ -23,7 +23,7 @@ type TheTypesOfBaseEvents = {
 type BaseDomainEvents<E> = TheTypesOfBaseEvents & E;
 
 export class BaseDomain<Events extends Record<EventType, unknown>> {
-  _name: string = "unknown";
+  _name: string = "BaseDomain";
   debug: boolean = false;
 
   _emitter = mitt<BaseDomainEvents<Events>>();
@@ -35,9 +35,9 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
       debug: boolean;
     }> = {}
   ) {
-    const { _name, debug } = params;
-    if (_name) {
-      this._name = _name;
+    const { _name: name, debug } = params;
+    if (name) {
+      this._name = name;
     }
   }
   uid() {
@@ -50,15 +50,13 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     // const error = new Error();
     // const lineNumber = error.stack.split("\n")[2].trim().split(" ")[1];
     // console.log(error.stack.split("\n"));
-    const texts = [
+    return [
       `%c CORE %c ${this._name} %c`,
       "color:white;background:#dfa639;border-top-left-radius:2px;border-bottom-left-radius:2px;",
       "color:white;background:#19be6b;border-top-right-radius:2px;border-bottom-right-radius:2px;",
       "color:#19be6b;",
       ...args,
     ];
-    console.log(...texts);
-    return texts;
   }
   errorTip(...args: unknown[]) {
     if (!this.debug) {
@@ -89,28 +87,23 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     this._emitter.emit(event, value);
   }
   tip(content: { icon?: unknown; text: string[] }) {
-    console.log("log this in base domain", this);
     // @ts-ignore
     this._emitter.emit(BaseEvents.Tip, content);
     return content.text.join("\n");
   }
   /** 主动销毁所有的监听事件 */
   destroy() {
-    // console.log("[DOMAIN]base - destroy", this._name);
     // this.log(this.name, "destroy");
     for (let i = 0; i < this.listeners.length; i += 1) {
       const off = this.listeners[i];
       off();
     }
-    this.listeners = [];
-    this._emitter.off("*");
     this.emit(BaseEvents.Destroy);
   }
-
   onTip(handler: Handler<TheTypesOfBaseEvents[BaseEvents.Tip]>) {
     return this.on(BaseEvents.Tip, handler);
   }
-  onUnmounted(handler: Handler<TheTypesOfBaseEvents[BaseEvents.Destroy]>) {
+  onDestroy(handler: Handler<TheTypesOfBaseEvents[BaseEvents.Destroy]>) {
     return this.on(BaseEvents.Destroy, handler);
   }
 

@@ -5,7 +5,6 @@ import { CancelToken } from "axios";
 import dayjs from "dayjs";
 
 import { FetchParams } from "@/domains/list/typing";
-import { client } from "@/store/request";
 import {
   JSONObject,
   ListResponse,
@@ -18,9 +17,10 @@ import {
 } from "@/types";
 import { DriveTypes, MediaErrorTypes, MediaTypes, ReportTypeTexts, ReportTypes } from "@/constants";
 import { bytes_to_size, query_stringify } from "@/utils";
+import { request } from "@/domains/request/utils";
 
 export function ping() {
-  return client.post("/api/ping");
+  return request.post("/api/ping");
 }
 
 export function pingPayload(...args: JSONObject[]) {

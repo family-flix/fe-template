@@ -3,6 +3,9 @@ import { HistoryCore } from "@/domains/history";
 const ownerDocument = globalThis.document;
 
 export function connect(history: HistoryCore<string, any>) {
+  history.reload = () => {
+    window.location.reload();
+  };
   ownerDocument.addEventListener("click", (event) => {
     // console.log('[DOMAIN]app/connect.web', event.target);
     let target = event.target;

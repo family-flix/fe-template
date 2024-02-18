@@ -1,8 +1,6 @@
 import axios, { AxiosError, AxiosInstance, CancelToken } from "axios";
 
 import { BaseDomain, Handler } from "@/domains/base";
-import { Application } from "@/domains/app";
-import { UserCore } from "@/domains/user";
 import { JSONObject, Result } from "@/types";
 import { query_stringify } from "@/utils";
 
@@ -14,42 +12,29 @@ type TheTypesOfEvents = {
 };
 
 type HttpClientCoreProps = {
-  user: UserCore;
+  hostname: string;
+  headers?: Record<string, string>;
 };
 type HttpClientCoreState = {};
 
 export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
   axios: AxiosInstance;
-  user: UserCore;
+
+  hostname: string;
+  headers: Record<string, string> = {};
 
   constructor(props: Partial<{ _name: string }> & HttpClientCoreProps) {
     super(props);
 
-    const { user } = props;
+    const { hostname, headers = {} } = props;
 
+    this.hostname = hostname;
+    this.headers = headers;
+    // 抽离具体的 axios，由外部提供
     const client = axios.create({
       timeout: 12000,
     });
     this.axios = client;
-    this.user = user;
-
-    type RequestClient = {
-      get: <T>(
-        url: string,
-        query?: JSONObject,
-        config?: Partial<{ headers: Record<string, string> }>
-      ) => Promise<Result<T>>;
-      post: <T>(
-        url: string,
-        body: JSONObject | FormData,
-        config?: Partial<{ headers: Record<string, string> }>
-      ) => Promise<Result<T>>;
-    };
-    const request = {} as RequestClient;
-  }
-
-  getHost() {
-    return window.location.origin;
   }
 
   async get<T>(
@@ -58,17 +43,19 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     extra: Partial<{ headers: Record<string, string>; token: CancelToken }> = {}
   ): Promise<Result<T>> {
     const client = this.axios;
-    const user = this.user;
+    // const user = this.user;
     try {
-      const h = this.getHost();
+      const h = this.hostname;
       const url = `${h}${endpoint}${query ? "?" + query_stringify(query) : ""}`;
       const resp = await client.get<{ code: number | string; msg: string; data: unknown | null }>(url, {
         cancelToken: extra.token,
         headers: {
+          ...this.headers,
           ...(extra.headers || {}),
-          Authorization: user.token,
+          // Authorization: user.token,
         },
       });
+      // 这个逻辑应该放到业务，不是所有项目都是这种返回值
       const { code, msg, data } = resp.data;
       if (code !== 0) {
         return Result.Err(msg, code, data);
@@ -80,24 +67,27 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
         return Result.Err("cancel", "CANCEL");
       }
       const { response, message } = error;
-      console.log("error", message);
+      // console.log("error", message);
       return Result.Err(message);
     }
   }
-
   async post<T>(
     endpoint: string,
     body?: JSONObject | FormData,
     extra: Partial<{ headers: Record<string, string>; token: CancelToken }> = {}
   ): Promise<Result<T>> {
     const client = this.axios;
-    const user = this.user;
+    // const user = this.user;
+    const h = this.hostname;
+    const url = `${h}${endpoint}`;
+    // console.log(url, h, endpoint, this.headers);
     try {
-      const resp = await client.post<{ code: number | string; msg: string; data: unknown | null }>(endpoint, body, {
+      const resp = await client.post<{ code: number | string; msg: string; data: unknown | null }>(url, body, {
         cancelToken: extra.token,
         headers: {
+          ...this.headers,
           ...(extra.headers || {}),
-          Authorization: user.token,
+          // Authorization: user.token,
         },
       });
       const { code, msg, data } = resp.data;
@@ -115,6 +105,23 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     }
   }
   cancel() {}
+  async fetch<T>(options: {
+    url: string;
+    method: "GET" | "POST" | "PUT" | "DELETE";
+    data?: JSONObject | FormData;
+    headers?: Record<string, string>;
+  }) {
+    return {} as { data: T };
+  }
+  setHeaders(headers: Record<string, string>) {
+    this.headers = headers;
+  }
+  appendHeaders(headers: Record<string, string>) {
+    this.headers = {
+      ...this.headers,
+      ...headers,
+    };
+  }
 
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);

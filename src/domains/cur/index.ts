@@ -2,16 +2,17 @@
  * @file 一个缓存/当前值
  * 类似 useRef
  */
-import { BaseDomain, Handler } from "@/domains/base";
+import { Handler, BaseDomain } from "@/domains/base";
 
 enum Events {
   StateChange,
+  Change,
 }
 type TheTypesOfEvents<T> = {
   [Events.StateChange]: T;
 };
 type RefProps<T> = {
-  defaultValue?: T;
+  value?: T;
   onChange?: (v: T) => void;
 };
 type RefState = {};
@@ -22,12 +23,12 @@ export class RefCore<T> extends BaseDomain<TheTypesOfEvents<T>> {
     return this.value;
   }
 
-  constructor(options: Partial<{ _name: string }> & RefProps<T> = {}) {
-    super(options);
+  constructor(props: Partial<{ _name: string }> & RefProps<T> = {}) {
+    super(props);
 
-    const { defaultValue, onChange } = options;
-    if (defaultValue) {
-      this.value = defaultValue;
+    const { value, onChange } = props;
+    if (value) {
+      this.value = value;
     }
     if (onChange) {
       this.onStateChange(onChange);

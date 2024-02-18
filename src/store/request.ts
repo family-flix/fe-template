@@ -1,7 +1,9 @@
 import { HttpClientCore } from "@/domains/http_client";
-
-import { user } from "./user";
+// import { __VERSION__ } from "@/constants";
+import { connect } from "@/domains/http_client/connect.web";
 
 export const client = new HttpClientCore({
-  user,
+  hostname: window.location.origin,
+  headers: {},
 });
+connect(client);

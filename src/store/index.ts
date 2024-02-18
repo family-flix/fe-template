@@ -11,7 +11,7 @@ import { BizError } from "@/domains/error/index";
 import { Result } from "@/types/index";
 
 import { user } from "./user";
-import { cache } from "./cache";
+import { storage } from "./storage";
 import { PageKeys, RouteConfig, routes } from "./routes";
 
 NavigatorCore.prefix = PATHNAME_PREFIX;
@@ -61,18 +61,18 @@ user.onTip((msg) => {
   app.tip(msg);
 });
 user.onLogin((profile) => {
-  cache.set("user", profile);
+  storage.set("user", profile);
   // app.showView(homeIndexPage);
   // homeLayout.showSubView(homeIndexPage);
   // rootView.showSubView(homeLayout);
   // router.push("/home/index");
 });
 user.onLogout(() => {
-  cache.clear("user");
+  storage.clear("user");
   // app.showView(loginPage);
 });
 user.onExpired(() => {
-  cache.clear("user");
+  storage.clear("user");
   app.tip({
     text: ["token 已过期，请重新登录"],
   });

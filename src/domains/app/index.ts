@@ -4,22 +4,23 @@
 
 import { BaseDomain, Handler } from "@/domains/base";
 import { UserCore } from "@/domains/user";
-import { HistoryCore } from "@/domains/history";
 import { JSONObject, Result } from "@/types";
 
 export enum OrientationTypes {
   Horizontal = "horizontal",
   Vertical = "vertical",
 }
-type ThemeTypes = "dark" | "light" | "system";
 const mediaSizes = {
   sm: 0,
-  md: 768, // 中等设备宽度阈值
-  lg: 992, // 大设备宽度阈值
-  xl: 1200, // 特大设备宽度阈值
-  "2xl": 1536, // 特大设备宽度阈值
+  /** 中等设备宽度阈值 */
+  md: 768,
+  /** 大设备宽度阈值 */
+  lg: 992,
+  /** 特大设备宽度阈值 */
+  xl: 1200,
+  /** 特大设备宽度阈值 */
+  "2xl": 1536,
 };
-type DeviceSizeTypes = keyof typeof mediaSizes;
 function getCurrentDeviceSize(width: number) {
   if (width >= mediaSizes["2xl"]) {
     return "2xl";
@@ -36,22 +37,27 @@ function getCurrentDeviceSize(width: number) {
   return "sm";
 }
 export const MEDIA = "(prefers-color-scheme: dark)";
+type DeviceSizeTypes = keyof typeof mediaSizes;
+type ThemeTypes = "dark" | "light" | "system";
+
 enum Events {
-  Ready,
   Tip,
   Error,
   Login,
   Logout,
   ForceUpdate,
-  Resize,
   DeviceSizeChange,
-  Blur,
-  Keydown,
-  EscapeKeyDown,
-  ClickLink,
+  /** 生命周期 */
+  Ready,
   Show,
   Hidden,
+  /** 平台相关 */
+  Resize,
+  Blur,
+  Keydown,
   OrientationChange,
+  EscapeKeyDown,
+  StateChange,
 }
 type TheTypesOfEvents = {
   [Events.Ready]: void;
@@ -59,10 +65,12 @@ type TheTypesOfEvents = {
   [Events.Error]: Error;
   [Events.Login]: {};
   [Events.Logout]: void;
+  [Events.ForceUpdate]: void;
   [Events.Resize]: {
     width: number;
     height: number;
   };
+  [Events.DeviceSizeChange]: DeviceSizeTypes;
   [Events.Keydown]: {
     key: string;
   };
@@ -70,6 +78,7 @@ type TheTypesOfEvents = {
   [Events.Blur]: void;
   [Events.Show]: void;
   [Events.Hidden]: void;
+  [Events.OrientationChange]: "vertical" | "horizontal";
   [Events.StateChange]: ApplicationState;
 };
 type ApplicationState = {
@@ -95,6 +104,7 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
 
   lifetimes: Pick<ApplicationProps, "beforeReady" | "onReady">;
 
+  ready = false;
   screen: {
     width: number;
     height: number;
@@ -102,7 +112,6 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
     width: 0,
     height: 0,
   };
-
   env: {
     wechat: boolean;
     ios: boolean;
@@ -112,18 +121,21 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
     ios: false,
     android: false,
   };
+  orientation = OrientationTypes.Vertical;
   curDeviceSize: DeviceSizeTypes = "md";
   theme: ThemeTypes = "system";
+
   safeArea = false;
   Events = Events;
 
   // @todo 怎么才能更方便地拓展 Application 类，给其添加许多的额外属性还能有类型提示呢？
 
-  _ready: boolean = false;
-
   get state(): ApplicationState {
     return {
-      ready: this._ready,
+      ready: this.ready,
+      theme: this.theme,
+      env: this.env,
+      deviceSize: this.curDeviceSize,
     };
   }
 
@@ -133,32 +145,17 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
     const { user: user, beforeReady, onReady } = props;
 
     this.$user = user;
-    // this.$history = history;
 
     this.lifetimes = {
       beforeReady,
       onReady,
     };
-    // const { availHeight, availWidth } = window.screen;
-    // if (window.navigator.userAgent.match(/iphone/i)) {
-    //   const matched = [
-    //     // iphonex iphonexs iphone12mini
-    //     "375-812",
-    //     // iPhone XS Max iPhone XR
-    //     "414-896",
-    //     // iPhone pro max iPhone14Plus
-    //     "428-926",
-    //     // iPhone 12/pro 13/14  753
-    //     "390-844",
-    //     // iPhone 14Pro
-    //     "393-852",
-    //     // iPhone 14ProMax
-    //     "430-932",
-    //   ].includes(`${availWidth}-${availHeight}`);
-    // }
   }
   /** 启动应用 */
   async start(size: { width: number; height: number }) {
+    const { width, height } = size;
+    this.screen = { width, height };
+    this.curDeviceSize = getCurrentDeviceSize(width);
     // console.log('[Application]start');
     const { beforeReady } = this.lifetimes;
     if (beforeReady) {
@@ -168,21 +165,12 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
         return Result.Err(r.error);
       }
     }
-    this._ready = true;
+    this.ready = true;
     this.emit(Events.Ready);
     this.emit(Events.StateChange, { ...this.state });
     // console.log("[]Application - before start");
     return Result.Ok(null);
   }
-  // push(...args: Parameters<HistoryCore["push"]>) {
-  //   return this.$history.push(...args);
-  // }
-  // replace(...args: Parameters<HistoryCore["replace"]>) {
-  //   return this.$history.replace(...args);
-  // }
-  // back(...args: Parameters<HistoryCore["back"]>) {
-  //   return this.$history.back(...args);
-  // }
   setTheme(theme?: string) {
     let resolved = theme;
     if (!resolved) {
@@ -196,21 +184,33 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
   applyTheme() {
     throw new Error("请在 connect.web 中实现 applyTheme 方法");
   }
-  setEnv(env: JSONObject) {
-    this.env = {
-      ...this.env,
-      ...env,
-    };
+  // push(...args: Parameters<HistoryCore["push"]>) {
+  //   return this.$history.push(...args);
+  // }
+  // replace(...args: Parameters<HistoryCore["replace"]>) {
+  //   return this.$history.replace(...args);
+  // }
+  // back(...args: Parameters<HistoryCore["back"]>) {
+  //   return this.$history.back(...args);
+  // }
+
+  tipUpdate() {
+    this.emit(Events.ForceUpdate);
+  }
+  /** 手机震动 */
+  vibrate() {}
+  setSize(size: { width: number; height: number }) {
+    this.screen = size;
   }
   /** 设置页面 title */
   setTitle(title: string): void {
     throw new Error("请实现 setTitle 方法");
   }
-
-  /** 手机震动 */
-  vibrate() {}
-  setSize(size: { width: number; height: number }) {
-    this.screen = size;
+  setEnv(env: JSONObject) {
+    this.env = {
+      ...this.env,
+      ...env,
+    };
   }
   /** 复制文本到粘贴板 */
   copy(text: string) {
@@ -218,6 +218,9 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
   }
   getComputedStyle(el: HTMLElement): CSSStyleDeclaration {
     throw new Error("请实现 getComputedStyle 方法");
+  }
+  getSystemTheme(e?: any): string {
+    return "";
   }
   /** 发送推送 */
   notify(msg: { title: string; body: string }) {
@@ -246,6 +249,26 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
   blur() {
     this.emit(Events.Blur);
   }
+
+  handleScreenOrientationChange(orientation: number) {
+    if (orientation === 0) {
+      this.orientation = OrientationTypes.Vertical;
+      this.emit(Events.OrientationChange, this.orientation);
+      return;
+    }
+    this.orientation = OrientationTypes.Horizontal;
+    this.emit(Events.OrientationChange, this.orientation);
+  }
+  handleResize(size: { width: number; height: number }) {
+    this.screen = size;
+    const mediaStr = getCurrentDeviceSize(size.width);
+    if (mediaStr !== this.curDeviceSize) {
+      this.curDeviceSize = mediaStr;
+      this.emit(Events.DeviceSizeChange, this.curDeviceSize);
+    }
+    this.emit(Events.Resize, size);
+  }
+
   /* ----------------
    * Lifetime
    * ----------------
@@ -263,7 +286,6 @@ export class Application extends BaseDomain<TheTypesOfEvents> {
   onOrientationChange(handler: Handler<TheTypesOfEvents[Events.OrientationChange]>) {
     return this.on(Events.OrientationChange, handler);
   }
-  /** 平台相关全局事件 */
   onResize(handler: Handler<TheTypesOfEvents[Events.Resize]>) {
     return this.on(Events.Resize, handler);
   }

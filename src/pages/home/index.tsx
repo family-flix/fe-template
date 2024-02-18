@@ -1,19 +1,19 @@
 /**
  * @file
  */
-import { RequestCore } from "@/domains/request_v2";
-import { ping } from "@/services";
-import { client } from "@/store/request";
-import { PageKeys } from "@/store/routes";
-import { ViewComponent } from "@/store/types";
 import { createSignal } from "solid-js";
+
+import { client } from "@/store/request";
+import { ViewComponent } from "@/store/types";
+import { RequestCoreV2 } from "@/domains/request/v2";
+import { ping } from "@/services";
 
 export const HomeIndexPage: ViewComponent = (props) => {
   const { app, view } = props;
 
-  const r = new RequestCore("/api/ping", {
+  const r = new RequestCoreV2({
+    fetch: ping,
     client,
-    method: "POST",
     onSuccess() {
       console.log("request success");
     },

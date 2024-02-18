@@ -1,5 +1,7 @@
-import { Result } from "@/types";
 import { BaseDomain, Handler } from "@/domains/base";
+import { RequestCoreV2 } from "@/domains/request/v2";
+import { HttpClientCore } from "@/domains/http_client";
+import { Result } from "@/types";
 
 import { fetch_user_profile, login, register, validate } from "./services";
 
@@ -26,8 +28,9 @@ type UserProps = {
   username: string;
   avatar: string;
   token: string;
+  client: HttpClientCore;
 };
-type UserState = UserProps & {
+type UserState = {
   // id: string;
   // username: string;
   // avatar: string;
@@ -37,6 +40,8 @@ type UserState = UserProps & {
 export class UserCore extends BaseDomain<TheTypesOfEvents> {
   name = "UserCore";
   debug = false;
+
+  $client: HttpClientCore;
 
   id: string = "";
   username: string = "Anonymous";
@@ -60,17 +65,14 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{ _name: string }> & UserProps) {
     super(options);
 
-    if (!options) {
-      this.isLogin === false;
-      return;
-    }
-    const { id, username, avatar, token } = options;
+    const { id, username, avatar, token, client } = options;
     // console.log("initialize", options);
     this.id = id;
     this.username = username;
     this.avatar = avatar;
     this.isLogin = !!token;
     this.token = token;
+    this.$client = client;
   }
   inputEmail(value: string) {
     this.values.email = value;
@@ -84,7 +86,11 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.Expired);
       return Result.Err("缺少 token");
     }
-    const r = await validate(this.token);
+    const fetch = new RequestCoreV2({
+      fetch: validate,
+      client: this.$client,
+    });
+    const r = await fetch.run({ token: this.token });
     if (r.error) {
       if (r.error.code === 900) {
         this.isLogin = false;
@@ -105,7 +111,11 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       const msg = this.tip({ text: ["请输入密码"] });
       return Result.Err(msg);
     }
-    const r = await login({ email, password });
+    const fetch = new RequestCoreV2({
+      fetch: login,
+      client: this.$client,
+    });
+    const r = await fetch.run({ email, password });
     if (r.error) {
       this.tip({ text: ["登录失败", r.error.message] });
       return Result.Err(r.error);
@@ -136,7 +146,11 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
       const msg = this.tip({ text: ["请输入密码"] });
       return Result.Err(msg);
     }
-    const r = await register({ email, password });
+    const fetch = new RequestCoreV2({
+      fetch: register,
+      client: this.$client,
+    });
+    const r = await fetch.run({ email, password });
     if (r.error) {
       this.tip({ text: ["注册失败", r.error.message] });
       return Result.Err(r.error);
@@ -156,7 +170,11 @@ export class UserCore extends BaseDomain<TheTypesOfEvents> {
     if (!this.isLogin) {
       return Result.Err("请先登录");
     }
-    const r = await fetch_user_profile();
+    const fetch = new RequestCoreV2({
+      fetch: fetch_user_profile,
+      client: this.$client,
+    });
+    const r = await fetch.run();
     if (r.error) {
       return r;
     }

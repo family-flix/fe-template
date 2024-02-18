@@ -1,7 +1,9 @@
 /**
  * @file 支持动画的 Popup
  */
-import { BaseDomain, Handler } from "@/domains/base";
+import { Handler } from "mitt";
+
+import { BaseDomain } from "@/domains/base";
 
 enum Events {
   StateChange,
@@ -37,14 +39,15 @@ type PresenceState = {
 };
 type PresenceProps = {
   open?: boolean;
+  mounted?: boolean;
 };
+
 export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
   name = "PresenceCore";
   debug = false;
 
-  // styles: CSSStyleDeclaration;
   animationName = "none";
-  // private state = "unmounted";
+
   open = false;
   mounted = false;
   unmounted = false;
@@ -57,13 +60,18 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
     };
   }
 
-  constructor(options: Partial<{ _name: string }> & PresenceProps = {}) {
-    super(options);
+  constructor(props: Partial<{ _name: string }> & PresenceProps = {}) {
+    super(props);
 
-    const { open } = options;
-    if (open) {
-      this.open = true;
-      this.mounted = true;
+    const { open, mounted } = props;
+    if (mounted !== undefined) {
+      this.mounted = mounted;
+    }
+    if (open !== undefined) {
+      this.open = open;
+      if (open) {
+        this.mounted = true;
+      }
     }
   }
 
@@ -105,6 +113,13 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
   // setStyles(styles: CSSStyleDeclaration) {
   //   this.styles = styles;
   // }
+  toggle() {
+    if (this.open) {
+      this.hide();
+      return;
+    }
+    this.show();
+  }
   show() {
     // this.log("show");
     // this.calc(true);
@@ -113,9 +128,9 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.Show);
     this.emit(Events.StateChange, { ...this.state });
   }
-  hide() {
-    // console.log(...this.log("hide"));
-    // this.calc(false);
+  hide(options: Partial<{ reason: "show_sibling" | "back" | "forward"; destroy: boolean }> = {}) {
+    console.log("[DOMAIN]ui/presence - hide", options);
+    const { destroy = true } = options;
     this.open = false;
     this.emit(Events.Hidden);
     this.emit(Events.StateChange, { ...this.state });
@@ -123,7 +138,9 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
       if (this.mounted === false) {
         return;
       }
-      this.destroy();
+      if (destroy) {
+        this.unmount();
+      }
     }, 120);
   }
   send(event: "UNMOUNT" | "ANIMATION_OUT" | "MOUNT" | "ANIMATION_END" | "MOUNT") {
@@ -136,8 +153,8 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
     // this.calc(nextState);
   }
   /** 将 DOM 从页面卸载 */
-  destroy() {
-    // console.log("[]PresenceCore - destroy", this.state.open, this.state.unmounted);
+  unmount() {
+    console.log("[]PresenceCore - destroy", this.open, this.unmounted);
     if (this.open) {
       // this.emit(Events.Show);
       return;
@@ -173,6 +190,6 @@ export class PresenceCore extends BaseDomain<TheTypesOfEvents> {
   }
 }
 
-function getAnimationName(styles?: CSSStyleDeclaration) {
-  return styles?.animationName || "none";
-}
+// function getAnimationName(styles?: CSSStyleDeclaration) {
+//   return styles?.animationName || "none";
+// }

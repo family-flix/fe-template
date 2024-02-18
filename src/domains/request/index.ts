@@ -13,30 +13,23 @@ enum Events {
   Success,
   Failed,
   Completed,
-  StateChange,
-  ResponseChange,
 }
-type TheTypesOfEvents<T extends (...args: any[]) => Promise<Result<any>>> = {
+type TheTypesOfEvents<T> = {
   [Events.LoadingChange]: boolean;
   [Events.BeforeRequest]: void;
   [Events.AfterRequest]: void;
   [Events.Success]: T;
   [Events.Failed]: BizError;
   [Events.Completed]: void;
-  [Events.StateChange]: RequestState<T>;
-  [Events.ResponseChange]: UnpackedResult<Unpacked<ReturnType<T>>> | null;
 };
-type RequestState<T extends (...args: any[]) => Promise<Result<any>>> = {
+type RequestState = {
   loading: boolean;
-  response: UnpackedResult<Unpacked<ReturnType<T>>> | null;
 };
-type RequestProps<T extends (...args: any[]) => Promise<Result<any>>> = {
-  delay?: null | number;
-  defaultResponse?: UnpackedResult<Unpacked<ReturnType<T>>>;
+type RequestProps<T> = {
   onSuccess: (v: T) => void;
   onFailed: (error: BizError) => void;
   onCompleted: () => void;
-  beforeRequest: () => void;
+  onBeforeRequest: () => void;
   onLoading: (loading: boolean) => void;
 };
 
@@ -50,7 +43,6 @@ export class RequestCore<T extends (...args: any[]) => Promise<Result<any>>> ext
 
   /** 原始 service 函数 */
   private _service: T;
-  delay: null | number = 800;
   loading = false;
   /** 处于请求中的 promise */
   pending: ReturnType<T> | null = null;
@@ -59,27 +51,20 @@ export class RequestCore<T extends (...args: any[]) => Promise<Result<any>>> ext
   /** 请求的响应 */
   response: UnpackedResult<Unpacked<ReturnType<T>>> | null = null;
 
-  get state(): RequestState<T> {
+  get state(): RequestState {
     return {
       loading: this.loading,
-      response: this.response,
     };
   }
 
   constructor(service: T, props: Partial<RequestProps<UnpackedResult<Unpacked<ReturnType<T>>>>> = {}) {
     super();
 
-    if (typeof fetch !== "function") {
+    if (typeof service !== "function") {
       throw new Error("service must be a function");
     }
     this._service = service;
-    const { delay, defaultResponse, onSuccess, onFailed, onCompleted, onLoading, beforeRequest } = props;
-    if (delay !== undefined) {
-      this.delay = delay;
-    }
-    if (defaultResponse) {
-      this.response = defaultResponse;
-    }
+    const { onSuccess, onFailed, onCompleted, onLoading, onBeforeRequest } = props;
     if (onSuccess) {
       this.onSuccess(onSuccess);
     }
@@ -92,31 +77,29 @@ export class RequestCore<T extends (...args: any[]) => Promise<Result<any>>> ext
     if (onLoading) {
       this.onLoadingChange(onLoading);
     }
-    if (beforeRequest) {
-      this.beforeRequest(beforeRequest);
+    if (onBeforeRequest) {
+      this.onBeforeRequest(onBeforeRequest);
     }
   }
-  token?: unknown;
   /** 执行 service 函数 */
   async run(...args: Parameters<T>) {
     if (this.pending !== null) {
       const r = await this.pending;
-      const d = r.data as UnpackedResult<Unpacked<ReturnType<T>>>;
+      const d = r.data;
       this.pending = null;
       return Result.Ok(d);
     }
     this.args = args;
-    this.emit(Events.LoadingChange, true);
-    this.emit(Events.StateChange, { ...this.state });
+    this.loading = true;
+    this.emit(Events.LoadingChange, this.loading);
     this.emit(Events.BeforeRequest);
-    const pending = this._service(...args, this.token) as ReturnType<T>;
+    const pending = this._service(...args) as ReturnType<T>;
     this.pending = pending;
-    const [r] = await Promise.all([pending, this.delay === null ? null : sleep(this.delay)]);
-    this.emit(Events.LoadingChange, false);
-    this.emit(Events.StateChange, { ...this.state });
+    const [r] = await Promise.all([pending, sleep(1000)]);
+    this.loading = false;
+    this.emit(Events.LoadingChange, this.loading);
     this.emit(Events.Completed);
     this.pending = null;
-    console.log("[DOMAIN]client - run", r.error);
     if (r.error) {
       this.emit(Events.Failed, r.error);
       return Result.Err(r.error);
@@ -124,8 +107,6 @@ export class RequestCore<T extends (...args: any[]) => Promise<Result<any>>> ext
     this.response = r.data;
     const d = r.data as UnpackedResult<Unpacked<ReturnType<T>>>;
     this.emit(Events.Success, d);
-    this.emit(Events.StateChange, { ...this.state });
-    this.emit(Events.ResponseChange, this.response);
     return Result.Ok(d);
   }
   /** 使用当前参数再请求一次 */
@@ -135,28 +116,11 @@ export class RequestCore<T extends (...args: any[]) => Promise<Result<any>>> ext
     }
     this.run(...this.args);
   }
-  cancel() {
-    // ...
-  }
-  clear() {
-    this.response = null;
-    this.emit(Events.StateChange, { ...this.state });
-    this.emit(Events.ResponseChange, this.response);
-  }
-  modifyResponse(fn: (resp: UnpackedResult<Unpacked<ReturnType<T>>>) => UnpackedResult<Unpacked<ReturnType<T>>>) {
-    if (this.response === null) {
-      return;
-    }
-    const nextResponse = fn(this.response);
-    this.response = nextResponse;
-    this.emit(Events.StateChange, { ...this.state });
-    this.emit(Events.ResponseChange, this.response);
-  }
 
   onLoadingChange(handler: Handler<TheTypesOfEvents<UnpackedResult<Unpacked<ReturnType<T>>>>[Events.LoadingChange]>) {
     return this.on(Events.LoadingChange, handler);
   }
-  beforeRequest(handler: Handler<TheTypesOfEvents<T>[Events.BeforeRequest]>) {
+  onBeforeRequest(handler: Handler<TheTypesOfEvents<T>[Events.BeforeRequest]>) {
     return this.on(Events.BeforeRequest, handler);
   }
   onSuccess(handler: Handler<TheTypesOfEvents<UnpackedResult<Unpacked<ReturnType<T>>>>[Events.Success]>) {
@@ -171,11 +135,5 @@ export class RequestCore<T extends (...args: any[]) => Promise<Result<any>>> ext
   }
   onCompleted(handler: Handler<TheTypesOfEvents<UnpackedResult<Unpacked<ReturnType<T>>>>[Events.Completed]>) {
     return this.on(Events.Completed, handler);
-  }
-  onStateChange(handler: Handler<TheTypesOfEvents<UnpackedResult<Unpacked<ReturnType<T>>>>[Events.StateChange]>) {
-    return this.on(Events.StateChange, handler);
-  }
-  onResponseChange(handler: Handler<TheTypesOfEvents<UnpackedResult<Unpacked<ReturnType<T>>>>[Events.ResponseChange]>) {
-    return this.on(Events.ResponseChange, handler);
   }
 }

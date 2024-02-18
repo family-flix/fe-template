@@ -145,14 +145,14 @@ export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
   async prepare(location: RouteLocation) {
     // console.log("[DOMAIN]router - start");
     const { pathname, href, search, origin } = location;
-    const pathname2 = pathname.replace(NavigatorCore.prefix!, "");
-    this.setPathname(pathname2);
+    const cleanPathname = pathname.replace(NavigatorCore.prefix!, "");
+    this.setPathname(cleanPathname);
     this.origin = origin;
     // this.pathname = pathname;
     const query = buildQuery(href);
     this.query = query;
     this._pending = {
-      pathname: pathname2,
+      pathname: cleanPathname,
       search,
       type: "initialize",
     };
