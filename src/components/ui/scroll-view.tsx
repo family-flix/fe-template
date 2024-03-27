@@ -12,6 +12,7 @@ import { cn } from "@/utils";
 export const ScrollView = (
   props: {
     store: ScrollViewCore;
+    contentClass?: string;
   } & JSX.HTMLAttributes<HTMLDivElement>
 ) => {
   const { store, ...restProps } = props;
@@ -49,7 +50,7 @@ export const ScrollView = (
   const Component = options[step()];
 
   return (
-    <Root class={cn("relative")}>
+    <Root class={cn("scroll-view overflow-hidden relative w-full h-full", props.class)}>
       <Show when={state().pullToRefresh}>
         <Indicator store={store}>
           <div class="flex items-center justify-center h-[80px]">
@@ -57,7 +58,7 @@ export const ScrollView = (
           </div>
         </Indicator>
       </Show>
-      <Content store={store} class={cn("w-full h-full overflow-y-auto hide-scroll", props.class)}>
+      <Content store={store} class={cn("w-full h-full overflow-y-auto hide-scroll", props.contentClass)}>
         {props.children}
       </Content>
     </Root>

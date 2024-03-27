@@ -263,7 +263,7 @@ export class NavigatorCore extends BaseDomain<TheTypesOfEvents> {
   // }
   /** 外部路由改变（点击浏览器前进、后退），作出响应 */
   handlePopState({ type, pathname, href }: { type: string; href: string; pathname: string }) {
-    console.log("[DOMAIN]navigator/index - handlePopState", type, this.pathname, this.prevHistories);
+    console.log("[DOMAIN]navigator/index - handlePopState", type, this.pathname, pathname);
     if (type !== "popstate") {
       return;
     }

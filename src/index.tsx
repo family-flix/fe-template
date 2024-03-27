@@ -135,14 +135,14 @@ function Application() {
   });
 
   return (
-    <div class={"screen w-screen h-screen overflow-hidden"}>
+    <div class={"screen w-screen h-screen"}>
       <Show when={subViews().length !== 0}>
         <For each={subViews()}>
           {(subView, i) => {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];
             return (
-              <KeepAliveRouteView class="absolute inset-0 opacity-100 dark:bg-black" store={subView} index={i()}>
+              <KeepAliveRouteView class="page fixed inset-0 opacity-100 dark:bg-black" store={subView} index={i()}>
                 {/* <div class="absolute right-2 bottom-2">{subView.title}</div> */}
                 <PageContent app={app} history={history} view={subView} />
               </KeepAliveRouteView>
@@ -150,8 +150,8 @@ function Application() {
           }}
         </For>
       </Show>
-      <Toast store={toast} />
-      <HistoryPanel store={history} />
+      {/* <Toast store={toast} />
+      <HistoryPanel store={history} /> */}
     </div>
   );
 }

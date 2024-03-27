@@ -46,9 +46,20 @@ export function connect(history: HistoryCore<string, any>) {
     history.handleClickLink({ href, target: null });
   });
   window.addEventListener("popstate", (event) => {
-    console.log("[DOMAIN]history/connect - window.addEventListener('popstate'", event.state?.from, event.state?.to);
     const { type } = event;
     const { pathname, href } = window.location;
-    history.$router.handlePopState({ type, href, pathname: event.state?.to });
+    console.log(
+      "[DOMAIN]history/connect - window.addEventListener('popstate'",
+      {
+        to: event.state?.to,
+        from: event.state?.from,
+      },
+      {
+        to: window.history.state?.to,
+        from: window.history.state?.from,
+      },
+      pathname
+    );
+    history.$router.handlePopState({ type, href, pathname });
   });
 }

@@ -292,7 +292,7 @@ export class HistoryCore<K extends string, R extends Record<string, any>> extend
   back() {
     const targetCursor = this.cursor - 1;
     const viewPrepareShow = this.stacks[targetCursor];
-    console.log("[DOMAIN]history - back", this.cursor, targetCursor);
+    console.log("[DOMAIN]history - back", this.cursor, targetCursor, this.stacks);
     if (!viewPrepareShow) {
       return;
     }
