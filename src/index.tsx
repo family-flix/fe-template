@@ -142,7 +142,7 @@ function Application() {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];
             return (
-              <KeepAliveRouteView class="page fixed inset-0 opacity-100 dark:bg-black" store={subView} index={i()}>
+              <KeepAliveRouteView class="page fixed inset-0 w-full h-full opacity-100 dark:bg-black" store={subView} index={i()}>
                 {/* <div class="absolute right-2 bottom-2">{subView.title}</div> */}
                 <PageContent app={app} history={history} view={subView} />
               </KeepAliveRouteView>

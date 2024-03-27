@@ -213,11 +213,20 @@ export const HomeLayout: ViewComponent = (props) => {
   const { app, history, view } = props;
 
   let containerRef: undefined | HTMLDivElement;
-  let start = { x: 0, y: 0 };
-  let cur = { x: 0, y: 0 };
+  let topPlaceholder: undefined | HTMLDivElement;
+  let bottomPlaceholder: undefined | HTMLDivElement;
+  let ended = false;
+  let isScrolling = false;
+  let prevInstanceOfScrolling = 0;
+  let scrollingTop = 0;
+  let isBottom = false;
+  const [start, setStart] = createSignal({ x: 0, y: 0 });
+  const [cur, setCur] = createSignal({ x: 0, y: 0 });
   const [subViews, setSubViews] = createSignal(view.subViews);
   const [pressCount, setPressCount] = createSignal(0);
   const [height, setHeight] = createSignal(0);
+  const [scrolling, setScrolling] = createSignal(0);
+  const [inBottom, setInBottom] = createSignal(false);
   // const [menus, setMenus] = createSignal([
   //   {
   //     text: "首页",
@@ -314,67 +323,179 @@ export const HomeLayout: ViewComponent = (props) => {
         ref={containerRef}
         id="container"
         class="fixed inset-0"
-        style={{ "background-color": "red" }}
+        style={{ "background-color": "#171717" }}
         onTouchStart={(event) => {
+          console.log("onTouchStart", { isBottom });
+          // const top = event.currentTarget.scrollTop;
+          // console.log(top);
+          if (scrollingTop !== 0) {
+            if (isBottom) {
+              ended = false;
+              event.stopPropagation();
+              const { clientX, clientY } = event.touches[0];
+              setStart({
+                x: clientX,
+                y: clientY,
+              });
+            }
+            return;
+          }
+          ended = false;
           event.stopPropagation();
           const { clientX, clientY } = event.touches[0];
-          start.x = clientX;
-          start.y = clientY;
+          setStart({
+            x: clientX,
+            y: clientY,
+          });
         }}
         onTouchMove={(event) => {
           event.stopPropagation();
           const { clientX, clientY } = event.touches[0];
-          cur.x = clientX;
-          const distance = clientY - start.y;
+          const distance = clientY - start().y;
+          if (isBottom) {
+            console.log("distance", distance);
+            if (distance < 0) {
+              console.log("here 1");
+              const r = damping(distance, 800);
+              setCur({
+                x: clientX,
+                y: clientY,
+              });
+              requestAnimationFrame(() => {
+                if (ended) {
+                  return;
+                }
+                setHeight(r);
+              });
+            }
+            return;
+          }
+          if (scrollingTop !== 0) {
+            //   isScrolling = true;
+            //   setHeight(prevInstanceOfScrolling + distance);
+            return;
+          }
+          console.log("here 2", distance);
           const r = damping(distance, 800);
-          cur.y = r;
+          setCur({
+            x: clientX,
+            y: clientY,
+          });
           requestAnimationFrame(() => {
+            if (ended) {
+              return;
+            }
             setHeight(r);
           });
         }}
         onTouchEnd={(event) => {
+          console.log("onTouchEnd");
+          ended = true;
           event.stopPropagation();
-          start = {
+          // if (isScrolling) {
+          //   prevInstanceOfScrolling = height();
+          //   return;
+          // }
+          setStart({
             x: 0,
             y: 0,
-          };
-          smoothDampToZero({
-            currentValue: cur.y,
-            onChange(v) {
-              setHeight(v);
-            },
           });
-        }}
-        onTouchCancel={(event) => {
-          event.stopPropagation();
-          start = {
+          setCur({
             x: 0,
             y: 0,
-          };
-          smoothDampToZero({
-            currentValue: cur.y,
-            onChange(v) {
-              setHeight(v);
-            },
           });
+          setHeight(0);
+          const placeholder = topPlaceholder;
+          if (!placeholder) {
+            return;
+          }
+          placeholder.style.transition = "all 0.6s";
+          setTimeout(() => {
+            placeholder.style.transition = "unset";
+          }, 680);
         }}
         onContextMenu={(event) => {
           event.preventDefault();
         }}
       >
-        <div class="absolute top-0 w-full p-4 text-center">Loading</div>
-        {/* <div style={{ height: height() + "px" }}></div> */}
-        <div class="" style={{ "background-color": "#333", height: `${240 * 8}px`, transform: `translateY(${height()}px)` }}>
-          <div>Press Count</div>
-          <div>{height()}</div>
-          {/* <div class="h-[240px] border"></div>
-          <div class="h-[240px] border"></div>
-          <div class="h-[240px] border"></div>
-          <div class="h-[240px] border"></div>
-          <div class="h-[240px] border"></div>
-          <div class="h-[240px] border"></div>
-          <div class="h-[240px] border"></div> */}
+        <div class="absolute top-0 w-full text-center text-white">Loading</div>
+        {/* <div ref={topPlaceholder} class="relative" style={{ height: height() + "px" }}>
+          <div class="absolute top-0 w-full text-center text-white">Loading</div>
+        </div> */}
+        <div
+          // class="fixed inset-0 h-full"
+          ref={topPlaceholder}
+          style={{ "background-color": "#4c4c4c", transform: `translateY(${height()}px)` }}
+          // style={{ "background-color": "#4c4c4c" }}
+        >
+          <div
+            class="space-y-2 h-screen overflow-y-auto scroll scroll--fix"
+            style={{ "background-color": "#ededed" }}
+            // style={{ "background-color": "#ededed", transform: `translateY(${height()}px)` }}
+            onScroll={(e) => {
+              const scrollTop = e.currentTarget.scrollTop;
+              scrollingTop = scrollTop;
+              let curBottom = false;
+              if (e.currentTarget.clientHeight + e.currentTarget.scrollTop === e.currentTarget.scrollHeight) {
+                curBottom = true;
+              }
+              if (curBottom !== isBottom) {
+                isBottom = curBottom;
+                setInBottom(curBottom);
+              }
+              setScrolling(scrollingTop);
+              console.log("scrolling", scrollingTop);
+            }}
+          >
+            <div class="absolute p-4 shadow-xl rounded-md bottom-4 right-4">
+              <div class="text-xl">Profile</div>
+              <div>
+                <div class="flex items-center justify-between">
+                  <div>Scrolling</div>
+                  <div>({scrolling()})</div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between">
+                  <div>Instance</div>
+                  <div>({height()})</div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between">
+                  <div>Start x</div>
+                  <div>({start().x})</div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>Start y</div>
+                  <div>({start().y})</div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between">
+                  <div>Cur x</div>
+                  <div>({cur().x})</div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>Cur y</div>
+                  <div>({cur().y})</div>
+                </div>
+              </div>
+            </div>
+            <div class="h-[240px] border">1</div>
+            <div class="h-[240px] border">2</div>
+            <div class="h-[240px] border">3</div>
+            <div class="h-[240px] border">4</div>
+            <div class="h-[240px] border">5</div>
+            <div class="h-[240px] border">6</div>
+            <div class="h-[240px] border">7</div>
+          </div>
         </div>
+        {/* <div
+          ref={bottomPlaceholder}
+          class="relative"
+          style={{ height: inBottom() ? `${Math.abs(height())}px` : "" }}
+        ></div> */}
       </div>
       {/* <div class="flex w-full h-full bg-white">
         <div class="w-[248px] py-4 pl-2 pr-2 border border-r-slate-300">

@@ -15,7 +15,6 @@ import { storage } from "./storage";
 import { PageKeys, RouteConfig, routes } from "./routes";
 
 NavigatorCore.prefix = PATHNAME_PREFIX;
-
 const router = new NavigatorCore();
 const view = new RouteViewCore({
   name: "root" as PageKeys,

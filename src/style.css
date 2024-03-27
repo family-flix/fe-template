@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+.scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
+  /* overscroll-behavior: contain; */
+  -webkit-overflow-scrolling: touch;
+}
+.scroll--fix {
+  overscroll-behavior: auto;
+}
+.scroll--hidden::-webkit-scrollbar {
+  display: none;
+}
+
 .__a {
   animation: __a 0.1s;
 }
