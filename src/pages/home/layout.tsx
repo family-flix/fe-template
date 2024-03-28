@@ -49,16 +49,17 @@ export class PullRefresh {
     canStart: false,
   };
 
-  constructor(options: Partial<{ $ele: HTMLDivElement }>) {
+  constructor(options: PullRefreshOptions) {
     this.$ele = options.$ele || document.body;
     this.options = options;
-    this.init();
+    // this.init();
   }
 
   _touchstart = (event: TouchEvent) => {
     const state = this.state;
     this.reset();
-    const scrollTop = document.body.scrollTop;
+    const scrollTop = this.$ele.scrollTop;
+    // console.log(document.body.scrollTop);
     if (!state.disable && scrollTop == 0) {
       state.scrollTop = scrollTop;
       state.isStart = true;
@@ -73,6 +74,7 @@ export class PullRefresh {
 
   _touchmove = (event: TouchEvent) => {
     const { state } = this;
+    console.log(state.isStart);
     if (state.isStart && !state.disable) {
       state.move = {
         x: event.touches ? event.touches[0].clientX : 0,
@@ -113,10 +115,11 @@ export class PullRefresh {
     const { state } = this;
     const { H, preventDefault, isStart } = state;
     this.reset();
-    if (isStart && !state.disable && preventDefault) {
+    if (isStart && !state.disable) {
       event.preventDefault();
       // 因为touchmove使用了 requestAnimationFrame 因此在touchend的时候也要使用
       // 不然有可能导致touchend之后touchmove又执行
+      console.log("before options.onEnd");
       requestAnimationFrame(() => {
         this.options.onEnd && this.options.onEnd(H);
       });
@@ -139,11 +142,11 @@ export class PullRefresh {
     $ele.addEventListener("touchstart", this._touchstart, { passive: false });
     $ele.addEventListener("touchmove", this._touchmove, { passive: false });
     $ele.addEventListener("touchend", this._touchend, { passive: false });
-    // !PHONE && $ele.addEventListener(touchleave, this._touchend, { passive: false });
+    // $ele.addEventListener('touchleave', this._touchend, { passive: false });
   }
 
   reset() {
-    this.state = Object.assign(this.state || {}, {
+    this.state = Object.assign(this.state, {
       start: { x: 0, y: 0 },
       move: { x: 0, y: 0 },
       preventDefault: false,
@@ -164,10 +167,10 @@ export class PullRefresh {
     this.state.disable = false;
   }
 
-  init() {
-    this.reset();
-    this._addEvents();
-  }
+  // init() {
+  //   this.reset();
+  //   this._addEvents();
+  // }
 }
 
 function damping(x: number, max: number) {
@@ -213,6 +216,7 @@ export const HomeLayout: ViewComponent = (props) => {
   const { app, history, view } = props;
 
   let containerRef: undefined | HTMLDivElement;
+  let loadingRef: undefined | HTMLDivElement;
   let topPlaceholder: undefined | HTMLDivElement;
   let bottomPlaceholder: undefined | HTMLDivElement;
   let ended = false;
@@ -227,6 +231,70 @@ export const HomeLayout: ViewComponent = (props) => {
   const [height, setHeight] = createSignal(0);
   const [scrolling, setScrolling] = createSignal(0);
   const [inBottom, setInBottom] = createSignal(false);
+
+  const resetLoading = () => {
+    const $loading = loadingRef;
+    if (!$loading) {
+      return;
+    }
+    $loading.style.height = "0px";
+    $loading.classList.remove(
+      "pull-to-refresh__loading--show",
+      "pull-to-refresh__loading--close",
+      "pull-to-refresh__loading--cancel"
+    );
+  };
+  const closeLoading = () => {
+    const $loading = loadingRef;
+    if (!$loading) {
+      return;
+    }
+    $loading.classList.add("pull-to-refresh__loading--close");
+  };
+  const handlePullEnd = (h: number) => {
+    const $loading = loadingRef;
+    console.log("handlePullEnd", $loading);
+    if (!$loading) {
+      return;
+    }
+    $loading.style["paddingBottom"] = "0";
+    if (h > 40) {
+      $loading.style["alignItems"] = "center";
+      // $loading.style['paddingBottom'] = '0';
+      $loading.classList.add("pull-to-refresh__loading--show");
+      // $(this.$loadingBg).text(this.props.text).addClass(S.loadingIcon).addClass(S.showLoading);
+
+      // triggerPageRefresh();
+      // this.props.onRefresh && this.props.onRefresh();
+
+      // todo 通过ref更改显示文案
+      // this.setTimeout(() => {
+      // closeLoading();
+      $loading.classList.add("pull-to-refresh__loading--close");
+      // }, this.props.refreshTime);
+    } else {
+      $loading.classList.add("pull-to-refresh__loading--cancel");
+      // $(this.$loadingBg).addClass(S.cancelLoading).text("");
+    }
+  };
+  const pullToRefresh = new PullRefresh({
+    // $ele: WPT.$curPage[0],
+    onStart: () => {
+      resetLoading();
+    },
+    onChange(h) {
+      const $loading = loadingRef;
+      if (!$loading) {
+        return;
+      }
+      $loading.style.height = `${Math.floor(h)}px`;
+      $loading.style["alignItems"] = "flex-end";
+      // $loading.style["paddingBottom"] = "10px";
+    },
+    onEnd: handlePullEnd,
+  });
+  // this.autoGenerateColor();
+
   // const [menus, setMenus] = createSignal([
   //   {
   //     text: "首页",
@@ -281,6 +349,14 @@ export const HomeLayout: ViewComponent = (props) => {
 
   onMount(() => {
     console.log("[PAGE]home/layout onMount", containerRef);
+    // const $container = containerRef;
+    // if (!$container) {
+    //   return;
+    // }
+    // pullToRefresh.$ele = $container;
+    // pullToRefresh._addEvents();
+    pullToRefresh.$ele = document.documentElement;
+    pullToRefresh._addEvents();
     // const hammer = new Hammer(containerRef);
     // hammer.on("press", function (e) {
     //   setPressCount((prev) => prev + 1);
@@ -319,169 +395,33 @@ export const HomeLayout: ViewComponent = (props) => {
 
   return (
     <>
-      <div
-        ref={containerRef}
-        id="container"
-        class="fixed inset-0"
-        style={{ "background-color": "#171717" }}
-        onTouchStart={(event) => {
-          console.log("onTouchStart", { isBottom });
-          // const top = event.currentTarget.scrollTop;
-          // console.log(top);
-          if (scrollingTop !== 0) {
-            if (isBottom) {
-              ended = false;
-              event.stopPropagation();
-              const { clientX, clientY } = event.touches[0];
-              setStart({
-                x: clientX,
-                y: clientY,
-              });
-            }
-            return;
-          }
-          ended = false;
-          event.stopPropagation();
-          const { clientX, clientY } = event.touches[0];
-          setStart({
-            x: clientX,
-            y: clientY,
-          });
-        }}
-        onTouchMove={(event) => {
-          event.stopPropagation();
-          const { clientX, clientY } = event.touches[0];
-          const distance = clientY - start().y;
-          if (isBottom) {
-            console.log("distance", distance);
-            if (distance < 0) {
-              console.log("here 1");
-              const r = damping(distance, 800);
-              setCur({
-                x: clientX,
-                y: clientY,
-              });
-              requestAnimationFrame(() => {
-                if (ended) {
-                  return;
-                }
-                setHeight(r);
-              });
-            }
-            return;
-          }
-          if (scrollingTop !== 0) {
-            //   isScrolling = true;
-            //   setHeight(prevInstanceOfScrolling + distance);
-            return;
-          }
-          console.log("here 2", distance);
-          const r = damping(distance, 800);
-          setCur({
-            x: clientX,
-            y: clientY,
-          });
-          requestAnimationFrame(() => {
-            if (ended) {
-              return;
-            }
-            setHeight(r);
-          });
-        }}
-        onTouchEnd={(event) => {
-          console.log("onTouchEnd");
-          ended = true;
-          event.stopPropagation();
-          // if (isScrolling) {
-          //   prevInstanceOfScrolling = height();
-          //   return;
-          // }
-          setStart({
-            x: 0,
-            y: 0,
-          });
-          setCur({
-            x: 0,
-            y: 0,
-          });
-          setHeight(0);
-          const placeholder = topPlaceholder;
-          if (!placeholder) {
-            return;
-          }
-          placeholder.style.transition = "all 0.6s";
-          setTimeout(() => {
-            placeholder.style.transition = "unset";
-          }, 680);
-        }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-        }}
-      >
-        <div class="absolute top-0 w-full text-center text-white">Loading</div>
-        {/* <div ref={topPlaceholder} class="relative" style={{ height: height() + "px" }}>
-          <div class="absolute top-0 w-full text-center text-white">Loading</div>
-        </div> */}
+      <div ref={containerRef} class="" style={{ "background-color": "#171717" }}>
         <div
-          // class="fixed inset-0 h-full"
-          ref={topPlaceholder}
-          style={{ "background-color": "#4c4c4c", transform: `translateY(${height()}px)` }}
-          // style={{ "background-color": "#4c4c4c" }}
+          ref={loadingRef}
+          class="pull-to-refresh__loading flex justify-center overflow-hidden w-full h-[0px] text-center text-white"
         >
+          Loading
+        </div>
+        <div class="scroll-view__content" style={{ "background-color": "#4c4c4c" }}>
           <div
-            class="space-y-2 h-screen overflow-y-auto scroll scroll--fix"
+            class="space-y-2"
             style={{ "background-color": "#ededed" }}
             // style={{ "background-color": "#ededed", transform: `translateY(${height()}px)` }}
-            onScroll={(e) => {
-              const scrollTop = e.currentTarget.scrollTop;
-              scrollingTop = scrollTop;
-              let curBottom = false;
-              if (e.currentTarget.clientHeight + e.currentTarget.scrollTop === e.currentTarget.scrollHeight) {
-                curBottom = true;
-              }
-              if (curBottom !== isBottom) {
-                isBottom = curBottom;
-                setInBottom(curBottom);
-              }
-              setScrolling(scrollingTop);
-              console.log("scrolling", scrollingTop);
-            }}
+            // onScroll={(e) => {
+            //   const scrollTop = e.currentTarget.scrollTop;
+            //   scrollingTop = scrollTop;
+            //   let curBottom = false;
+            //   if (e.currentTarget.clientHeight + e.currentTarget.scrollTop === e.currentTarget.scrollHeight) {
+            //     curBottom = true;
+            //   }
+            //   if (curBottom !== isBottom) {
+            //     isBottom = curBottom;
+            //     setInBottom(curBottom);
+            //   }
+            //   setScrolling(scrollingTop);
+            //   console.log("scrolling", scrollingTop);
+            // }}
           >
-            <div class="absolute p-4 shadow-xl rounded-md bottom-4 right-4">
-              <div class="text-xl">Profile</div>
-              <div>
-                <div class="flex items-center justify-between">
-                  <div>Scrolling</div>
-                  <div>({scrolling()})</div>
-                </div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between">
-                  <div>Instance</div>
-                  <div>({height()})</div>
-                </div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between">
-                  <div>Start x</div>
-                  <div>({start().x})</div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div>Start y</div>
-                  <div>({start().y})</div>
-                </div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between">
-                  <div>Cur x</div>
-                  <div>({cur().x})</div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div>Cur y</div>
-                  <div>({cur().y})</div>
-                </div>
-              </div>
-            </div>
             <div class="h-[240px] border">1</div>
             <div class="h-[240px] border">2</div>
             <div class="h-[240px] border">3</div>
@@ -497,6 +437,41 @@ export const HomeLayout: ViewComponent = (props) => {
           style={{ height: inBottom() ? `${Math.abs(height())}px` : "" }}
         ></div> */}
       </div>
+      {/* <div class="absolute p-4 shadow-xl rounded-md bottom-4 right-4">
+        <div class="text-xl">Profile</div>
+        <div>
+          <div class="flex items-center justify-between">
+            <div>Scrolling</div>
+            <div>({scrolling()})</div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <div>Instance</div>
+            <div>({height()})</div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <div>Start x</div>
+            <div>({start().x})</div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>Start y</div>
+            <div>({start().y})</div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <div>Cur x</div>
+            <div>({cur().x})</div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>Cur y</div>
+            <div>({cur().y})</div>
+          </div>
+        </div>
+      </div> */}
       {/* <div class="flex w-full h-full bg-white">
         <div class="w-[248px] py-4 pl-2 pr-2 border border-r-slate-300">
           <div class="flex flex-col justify-between h-full w-full">

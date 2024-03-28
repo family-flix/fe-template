@@ -14,16 +14,42 @@
 .scroll--hidden::-webkit-scrollbar {
   display: none;
 }
-
 .__a {
   animation: __a 0.1s;
 }
-
+.pull-to-refresh__loading--show {
+  animation: showLoading 0.3s both;
+}
+.pull-to-refresh__loading--close {
+  animation: closeLoading 0.3s both;
+}
+.pull-to-refresh__loading--cancel {
+  animation: cancelLoading 0.3s both;
+}
 @keyframes __a {
   0% {
     transform: scale(1);
   }
   100% {
     transform: scale(1);
+  }
+}
+@keyframes showLoading {
+  to {
+    height: 40px;
+  }
+}
+@keyframes closeLoading {
+  from {
+    height: 40px;
+  }
+
+  to {
+    height: 0;
+  }
+}
+@keyframes cancelLoading {
+  to {
+    height: 0;
   }
 }

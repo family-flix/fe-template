@@ -3,21 +3,16 @@ import React, { Component } from 'react';
 
 import { PullRefresh } from './core';
 
-import S from './index.m.less';
-
-import showHide from '@wpt/showHide';
-
 /**
  *
  * @export
  * @class PullToRefresh
  * @extends {React.Component}
  */
-@showHide
 export default class PullToRefresh extends Component {
     static defaultProps = {
         onRefresh: () => undefined,
-        text: '微拍堂为您保驾护航',
+        text: '下拉加载更多',
         refreshTime: 500,
         className: '',
     };
