@@ -11,11 +11,12 @@ import { HomeIndexPage } from "@/pages/home";
 // import { LoginPage } from "@/pages/login";
 // import { RegisterPage } from "@/pages/register";
 import { NotFoundPage } from "@/pages/notfound";
+import { PullToRefreshExampleBeibeiPage } from "@/pages/beibei";
 
 import { PageKeys } from "./routes";
 
 export const pages: Omit<Record<PageKeys, ViewComponent>, "root"> = {
-  "root.home_layout": HomeLayout,
+  "root.home_layout": PullToRefreshExampleBeibeiPage,
   "root.home_layout.home_index": HomeIndexPage,
   // "root.home_layout.home_season": HomeSeasonListPage,
   "root.home_layout.home_season": lazy(async () => ({ default: (await import("@/pages/season")).HomeSeasonListPage })),

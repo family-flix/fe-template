@@ -172,7 +172,7 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
     this.$presence.onStateChange((nextState) => {
       const { open, mounted } = nextState;
       console.log("[ROUTE_VIEW]this.presence.onStateChange", this.title, this.state.visible, open, mounted);
-      console.log(performance.now());
+      // console.log(performance.now());
       const prevVisible = this.state.visible;
       this.visible = open;
 
@@ -237,7 +237,7 @@ export class RouteViewCore extends BaseDomain<TheTypesOfEvents> {
     }
     view.onUnmounted(() => {
       console.log("[DOMAIN]route_view - removeView.onUnmounted", this.title, view.title);
-      console.log(performance.now());
+      // console.log(performance.now());
       view.destroy();
       // view.setUnmounted();
       this.subViews = this.subViews.filter((v) => v !== view);
