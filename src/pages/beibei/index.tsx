@@ -1,71 +1,61 @@
 import { onMount } from "solid-js";
 
-import { MeScrollProps, MeScroll } from "@/domains/pull-to-refresh";
+import { ScrollViewCoreV2 } from "@/domains/scroll_view_v2";
 import { ScrollViewV2 } from "@/components/ui/scroll-view-v2";
 
 import "./index.css";
-import { ScrollViewCoreV2 } from "@/domains/scroll_view_v2";
 
 export const PullToRefreshExampleBeibeiPage = () => {
   onMount(() => {
     /*下拉刷新的回调 */
-    function downCallback() {
-      //加载列表数据
-      getListDataFromNet(
-        0,
-        1,
-        (data) => {
-          //联网成功的回调,隐藏下拉刷新的状态
-          mescroll.endSuccess();
-          //设置列表数据
-          setListData(data, false);
-        },
-        function () {
-          //联网失败的回调,隐藏下拉刷新的状态
-          mescroll.endErr();
-        }
-      );
-    }
+    // function downCallback() {
+    //   //加载列表数据
+    //   getListDataFromNet(
+    //     0,
+    //     1,
+    //     (data) => {
+    //       //联网成功的回调,隐藏下拉刷新的状态
+    //       mescroll.endSuccess();
+    //       //设置列表数据
+    //       setListData(data, false);
+    //     },
+    //     function () {
+    //       //联网失败的回调,隐藏下拉刷新的状态
+    //       mescroll.endErr();
+    //     }
+    //   );
+    // }
 
     /*上拉加载的回调 page = {num:1, size:10}; num:当前页 从1开始, size:每页数据条数 */
     function upCallback(page: { num: number; size: number }) {
       //联网加载数据
-      getListDataFromNet(
-        page.num,
-        page.size,
-        (curPageData) => {
-          //联网成功的回调,隐藏下拉刷新和上拉加载的状态;
-          //mescroll会根据传的参数,自动判断列表如果无任何数据,则提示空;列表无下一页数据,则提示无更多数据;
-          console.log(
-            "page.num=" + page.num + ", page.size=" + page.size + ", curPageData.length=" + curPageData.length
-          );
-          //方法一(推荐): 后台接口有返回列表的总页数 totalPage
-          //mescroll.endByPage(curPageData.length, totalPage); //必传参数(当前页的数据个数, 总页数)
+      getListDataFromNet(page.num, page.size, (curPageData: any) => {
+        //联网成功的回调,隐藏下拉刷新和上拉加载的状态;
+        //mescroll会根据传的参数,自动判断列表如果无任何数据,则提示空;列表无下一页数据,则提示无更多数据;
+        console.log("page.num=" + page.num + ", page.size=" + page.size + ", curPageData.length=" + curPageData.length);
+        //方法一(推荐): 后台接口有返回列表的总页数 totalPage
+        //mescroll.endByPage(curPageData.length, totalPage); //必传参数(当前页的数据个数, 总页数)
 
-          //方法二(推荐): 后台接口有返回列表的总数据量 totalSize
-          //mescroll.endBySize(curPageData.length, totalSize); //必传参数(当前页的数据个数, 总数据量)
+        //方法二(推荐): 后台接口有返回列表的总数据量 totalSize
+        //mescroll.endBySize(curPageData.length, totalSize); //必传参数(当前页的数据个数, 总数据量)
 
-          //方法三(推荐): 您有其他方式知道是否有下一页 hasNext
-          //mescroll.endSuccess(curPageData.length, hasNext); //必传参数(当前页的数据个数, 是否有下一页true/false)
+        //方法三(推荐): 您有其他方式知道是否有下一页 hasNext
+        //mescroll.endSuccess(curPageData.length, hasNext); //必传参数(当前页的数据个数, 是否有下一页true/false)
 
-          //方法四 (不推荐),会存在一个小问题:比如列表共有20条数据,每页加载10条,共2页.如果只根据当前页的数据个数判断,则需翻到第三页才会知道无更多数据,如果传了hasNext,则翻到第二页即可显示无更多数据.
-          mescroll.endSuccess(curPageData.length);
+        //方法四 (不推荐),会存在一个小问题:比如列表共有20条数据,每页加载10条,共2页.如果只根据当前页的数据个数判断,则需翻到第三页才会知道无更多数据,如果传了hasNext,则翻到第二页即可显示无更多数据.
+        // mescroll.endSuccess(curPageData.length);
 
-          //提示:curPageData.length必传的原因:
-          // 1.判断是否有下一页的首要依据: 当传的值小于page.size时,则一定会认为无更多数据.
-          // 2.比传入的totalPage, totalSize, hasNext具有更高的判断优先级
-          // 3.使配置的noMoreSize生效
+        //提示:curPageData.length必传的原因:
+        // 1.判断是否有下一页的首要依据: 当传的值小于page.size时,则一定会认为无更多数据.
+        // 2.比传入的totalPage, totalSize, hasNext具有更高的判断优先级
+        // 3.使配置的noMoreSize生效
 
-          //设置列表数据
-          setListData(curPageData, true);
-        },
-        function () {
-          //联网失败的回调,隐藏上拉加载的状态
-          mescroll.endErr();
-        }
-      );
+        //设置列表数据
+        setListData(curPageData, true);
+      });
     }
     /* 设置列表数据 */
+    // @ts-ignore
     function setListData(curPageData, isAppend) {
       var listDom = document.getElementById("dataList");
       for (var i = 0; i < curPageData.length; i++) {
@@ -80,8 +70,10 @@ export const PullToRefreshExampleBeibeiPage = () => {
         liDom.innerHTML = str;
 
         if (isAppend) {
+          // @ts-ignore
           listDom.appendChild(liDom); //加在列表的后面,上拉加载
         } else {
+          // @ts-ignore
           listDom.insertBefore(liDom, listDom.firstChild); //加在列表的前面,下拉刷新
         }
       }
@@ -256,7 +248,8 @@ export const PullToRefreshExampleBeibeiPage = () => {
         pdSold: 138,
       },
     ];
-    function getListDataFromNet(pageNum, pageSize, successCallback, errorCallback) {
+    // @ts-ignore
+    function getListDataFromNet(pageNum, pageSize, successCallback) {
       setTimeout(function () {
         var listData = [];
         if (pageNum == 0) {
@@ -329,80 +322,39 @@ export const PullToRefreshExampleBeibeiPage = () => {
     // });
   });
 
+  const u = navigator.userAgent;
+  const os = {
+    ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/),
+    pc: typeof window.orientation === "undefined",
+    android: u.indexOf("Android") > -1 || u.indexOf("Adr") > -1,
+    wx: u.toLowerCase().match(/MicroMessenger/i)?.[0] === "micromessenger",
+  };
   const scroll = new ScrollViewCoreV2({
+    os,
     down: {
-      offset: 65,
-      // 下拉刷新的布局内容
-      // htmlContent: [
-      //   '<img class="downwarp-slogan" src="/examples/beibei/mescroll-slogan.jpg"/>',
-      //   '<p class="downwarp-progress"></p>',
-      //   '<p class="downwarp-loading mescroll-rotate"></p>',
-      // ].join(""),
-      auto: false, //是否在初始化完毕之后自动执行下拉回调callback; 默认true
-      inited(_, downwarp) {
-        // elements.downLoadingDom = downwarp.getElementsByClassName("downwarp-loading")[0] as HTMLElement;
-        // elements.downProgressDom = downwarp.getElementsByClassName("downwarp-progress")[0] as HTMLElement;
-      },
-      inOffset() {
-        // 进入指定距离范围内那一刻的回调
-        // elements.downLoadingDom.style.display = "none";
-        // elements.downProgressDom.style.display = "inline-block";
-        // elements.downProgressDom.style.webkitTransform = "rotate(0deg)";
-        // elements.downProgressDom.style.transform = "rotate(0deg)";
-      },
-      outOffset() {
-        // 下拉超过指定距离那一刻的回调
-        // elements.downProgressDom.style.webkitTransform = "rotate(180deg)";
-        // elements.downProgressDom.style.transform = "rotate(180deg)";
-      },
-      onMoving(mescroll, rate, downHight) {
-        // 下拉过程中的回调，滑动过程一直在执行；
-        // rate 下拉区域当前高度与指定距离的比值(inOffset: rate<1; outOffset: rate>=1);
-        // downHight当前下拉区域的高度
-        // 配置空方法,表示移动过程不做处理 (不可写onMoving:null,否则会执行mescroll默认配置的onMoving方法)
-      },
-      // showLoading(mescroll: MeScroll) {
-      //   elements.downProgressDom.style.display = "none";
-      //   elements.downLoadingDom.style.display = "inline-block";
-      // },
-      callback: () => {
-        // downCallback();
-      },
-    },
-    up: {
-      auto: true,
-      isBoth: true,
-      isBounce: false,
-      callback: () => {},
+      offset: 80,
     },
   });
 
-  scroll.onInOffset(() => {
-    console.log("start pulling");
-  });
-  scroll.onOutOffset(() => {
-    console.log("binggo");
-  });
-  scroll.onPulling(({ instance }) => {
-    console.log("moving", instance);
+  scroll.onPullToRefresh(() => {
+    setTimeout(() => {
+      scroll.finishPullToRefresh();
+    }, 800);
   });
 
   onMount(() => {
-    setTimeout(() => {
-      scroll.startPullToRefresh();
-      setTimeout(() => {
-        scroll.finishPullToRefresh();
-      }, 2000);
-    }, 3000);
+    // setTimeout(() => {
+    //   scroll.startPullToRefresh();
+    // }, 3000);
   });
 
   return (
     <div>
       <div class="header"></div>
-      <ScrollViewV2 store={scroll}>
+      <ScrollViewV2 store={scroll} class="fixed top-[84px] bottom-0 h-auto">
         <img src="/examples/beibei/beibei1.jpg" />
         <img src="/examples/beibei/beibei2.jpg" />
-        <ul id="dataList" class="data-list"></ul>
+        <ul id="dataList" class="data-list h-[1200px]"></ul>
       </ScrollViewV2>
       {/* <div class="footer"></div> */}
     </div>

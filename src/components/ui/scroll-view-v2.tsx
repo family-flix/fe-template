@@ -2,11 +2,10 @@
  * @file 可滚动容器，支持下拉刷新、滚动监听等
  */
 import { JSX } from "solid-js/jsx-runtime";
-import { Show, createSignal, onMount } from "solid-js";
-import { ArrowDown, ArrowUp, Loader2 } from "lucide-solid";
+import { createSignal } from "solid-js";
 
+import * as ScrollViewPrimitive from "@/packages/ui/scroll-view";
 import { ScrollViewCoreV2 } from "@/domains/scroll_view_v2";
-import { connect } from "@/domains/scroll_view_v2/connect.web";
 import { cn } from "@/utils";
 
 export const ScrollViewV2 = (
@@ -18,58 +17,36 @@ export const ScrollViewV2 = (
   const { store, ...restProps } = props;
 
   const [state, setState] = createSignal(store.state);
+  const [rotate, setRotate] = createSignal(false);
 
   //   store.onStateChange((nextState) => {
   //     setState(nextState);
   //   });
 
-  //   const options = {
-  //     pending: () => null,
-  //     pulling: () => (
-  //       <div class="flex items-center justify-center space-x-2">
-  //         <ArrowDown width={18} height={18} />
-  //         <div>下拉刷新</div>
-  //       </div>
-  //     ),
-  //     releasing: () => (
-  //       <div class="flex items-center justify-center space-x-2">
-  //         <ArrowUp width={18} height={18} />
-  //         <div>松手刷新</div>
-  //       </div>
-  //     ),
-  //     refreshing: () => (
-  //       <div class="flex items-center justify-center space-x-2">
-  //         <Loader2 class="animate animate-spin" width={18} height={18} />
-  //         <div>正在刷新</div>
-  //       </div>
-  //     ),
-  //   };
-  //   const Component = options[state().step];
-  let view: undefined | HTMLDivElement = undefined;
-  let wrap: undefined | HTMLDivElement = undefined;
-
-  onMount(() => {
-    if (!view) {
-      return;
-    }
-    if (!wrap) {
-      return;
-    }
-    store.scrollDom = view;
-    store.downwarp = wrap;
-    store.listenPullToRefreshEvents();
+  store.inDownOffset(() => {
+    setRotate(false);
+  });
+  store.outDownOffset(() => {
+    setRotate(true);
   });
 
   return (
-    <div ref={view} id="mescroll" class={cn("mescroll", props.class)}>
-      <div ref={wrap} class="mescroll-downwarp" style={{ height: 0 }}>
-        <div class="downwarp-content">
+    <ScrollViewPrimitive.Root class={cn("w-full h-full overflow-y-auto", props.class)} store={store}>
+      <ScrollViewPrimitive.DownIndicator
+        class="mescroll-downwarp relative w-full overflow-hidden text-center"
+        store={store}
+      >
+        <div class="absolute left-0 bottom-0 w-full min-h-[30px] py-[10px]">
           <img class="downwarp-slogan" src="/examples/beibei/mescroll-slogan.jpg" />
-          <p class="downwarp-progress"></p>
-          <p class="downwarp-loading mescroll-rotate" style={{ display: "none" }}></p>
+          <ScrollViewPrimitive.Progress store={store}>
+            <p classList={{ "downwarp-progress": true, "rotate-[180deg]": rotate(), "rotate-[0deg]": !rotate() }}></p>
+          </ScrollViewPrimitive.Progress>
+          <ScrollViewPrimitive.Loading store={store}>
+            <p class="downwarp-loading mescroll-rotate"></p>
+          </ScrollViewPrimitive.Loading>
         </div>
-      </div>
+      </ScrollViewPrimitive.DownIndicator>
       {props.children}
-    </div>
+    </ScrollViewPrimitive.Root>
   );
 };

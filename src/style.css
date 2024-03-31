@@ -70,11 +70,11 @@ body {
   overflow-y: auto;
 }
 /** 启用硬件加速，使动画渲染流畅，解决部分手机闪白屏问题，在下拉刷新和上拉加载触发时启用。结束后移除，避免滥用导致其他兼容性问题 */
-.mescroll-hardware {
-  -webkit-transform: translateZ(0);
-  -webkit-transform-style: preserve-3d;
-  -webkit-backface-visibility: hidden;
-  -webkit-perspective: 1000;
+.mescroll--hardware {
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000;
 }
 /** 下拉刷新区域 */
 .mescroll-downwarp {
@@ -106,21 +106,17 @@ body {
   visibility: hidden;
 }
 /** 下拉刷新,上拉加载--提示文本 */
-.mescroll-downwarp .downwarp-tip,
-.mescroll-upwarp .upwarp-tip,
-.mescroll-upwarp .upwarp-nodata {
+.mescroll-downwarp .downwarp-tip {
   display: inline-block;
   font-size: 12px;
   color: gray;
   vertical-align: middle;
 }
-.mescroll-downwarp .downwarp-tip,
-.mescroll-upwarp .upwarp-tip {
+.mescroll-downwarp .downwarp-tip {
   margin-left: 8px;
 }
 /** 下拉刷新，上拉加载--旋转进度条 */
-.mescroll-downwarp .downwarp-progress,
-.mescroll-upwarp .upwarp-progress {
+.mescroll-downwarp .downwarp-progress {
   display: inline-block;
   width: 16px;
   height: 16px;
