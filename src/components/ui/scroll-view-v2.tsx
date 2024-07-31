@@ -16,12 +16,7 @@ export const ScrollViewV2 = (
 ) => {
   const { store, ...restProps } = props;
 
-  const [state, setState] = createSignal(store.state);
   const [rotate, setRotate] = createSignal(false);
-
-  //   store.onStateChange((nextState) => {
-  //     setState(nextState);
-  //   });
 
   store.inDownOffset(() => {
     setRotate(false);
@@ -32,20 +27,30 @@ export const ScrollViewV2 = (
 
   return (
     <ScrollViewPrimitive.Root class={cn("w-full h-full overflow-y-auto", props.class)} store={store}>
-      <ScrollViewPrimitive.DownIndicator
-        class="mescroll-downwarp relative w-full overflow-hidden text-center"
-        store={store}
-      >
+      <ScrollViewPrimitive.Indicator class="relative w-full overflow-hidden text-center" store={store}>
         <div class="absolute left-0 bottom-0 w-full min-h-[30px] py-[10px]">
-          <img class="downwarp-slogan" src="/examples/beibei/mescroll-slogan.jpg" />
+          <img class="block w-[210px] h-[84px] m-auto" src="/examples/beibei/mescroll-slogan.jpg" />
           <ScrollViewPrimitive.Progress store={store}>
-            <p classList={{ "downwarp-progress": true, "rotate-[180deg]": rotate(), "rotate-[0deg]": !rotate() }}></p>
+            <p
+              classList={{
+                "w-[20px] h-[20px] border-none m-auto": true,
+                "rotate-[180deg]": rotate(),
+                "rotate-[0deg]": !rotate(),
+              }}
+              style={{
+                "background-size": "contain",
+                "background-repeat": "no-repeat",
+                "background-position": "center",
+                "background-image": "url('/examples/beibei/mescroll-progress.png')",
+                transition: "all 300ms",
+              }}
+            ></p>
           </ScrollViewPrimitive.Progress>
           <ScrollViewPrimitive.Loading store={store}>
-            <p class="downwarp-loading mescroll-rotate"></p>
+            <p class="w-[20px] h-[20px] rounded-full border border-[#ff8095] border-b-transparent animate animate-spin"></p>
           </ScrollViewPrimitive.Loading>
         </div>
-      </ScrollViewPrimitive.DownIndicator>
+      </ScrollViewPrimitive.Indicator>
       {props.children}
     </ScrollViewPrimitive.Root>
   );

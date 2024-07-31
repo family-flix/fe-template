@@ -17,15 +17,6 @@
 .__a {
   animation: __a 0.1s;
 }
-.pull-to-refresh__loading--show {
-  animation: showLoading 0.3s both;
-}
-.pull-to-refresh__loading--close {
-  animation: closeLoading 0.3s both;
-}
-.pull-to-refresh__loading--cancel {
-  animation: cancelLoading 0.3s both;
-}
 @keyframes __a {
   0% {
     transform: scale(1);
@@ -34,152 +25,95 @@
     transform: scale(1);
   }
 }
-@keyframes showLoading {
-  to {
-    height: 40px;
-  }
-}
-@keyframes closeLoading {
-  from {
-    height: 40px;
-  }
 
-  to {
-    height: 0;
-  }
-}
-@keyframes cancelLoading {
-  to {
-    height: 0;
-  }
-}
-
-/** 设置 body 的高度，以便正确的获取 body 高度和触发 scroll 事件 */
 html,
 body {
   height: 100%;
 }
-/** 使iOS列表滑动流畅 */
 body {
   -webkit-overflow-scrolling: touch;
 }
-/** 下拉刷新和上拉加载的滑动区域 */
-.mescroll {
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-}
-/** 启用硬件加速，使动画渲染流畅，解决部分手机闪白屏问题，在下拉刷新和上拉加载触发时启用。结束后移除，避免滥用导致其他兼容性问题 */
-.mescroll--hardware {
+.enable-hardware {
   transform: translateZ(0);
   transform-style: preserve-3d;
   backface-visibility: hidden;
   perspective: 1000;
 }
-/** 下拉刷新区域 */
-.mescroll-downwarp {
-  position: relative;
+
+.popup {
+  z-index: 99;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 750px;
+  height: 100vh;
+  transform: translateX(-50%);
+}
+.popup__mask {
+  z-index: 9;
+  position: fixed;
   width: 100%;
-  height: 0;
-  overflow: hidden;
-  text-align: center;
+  height: 100%;
+  background-color: #000000;
+  opacity: 0.5;
 }
-/** 下拉刷新--高度重置的过渡动画 */
-.mescroll-downwarp-reset {
-  transition: height 300ms;
+.popup__mask--enter {
+  animation: FadeIn2 0.5s ease forwards;
 }
-/** 下拉刷新--内容区,定位于区域底部 */
-.mescroll-downwarp .downwarp-content {
-  position: absolute;
+.popup__mask--exit {
+  animation: FadeOut2 0.5s ease forwards;
+}
+.popup__container {
+  z-index: 10;
+  position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
-  min-height: 30px;
-  padding: 10px 0;
+  background-color: #f2f2f2;
+  border-radius: 16px 16px 0 0;
 }
-/** 上拉加载区域 */
-.mescroll-upwarp {
-  min-height: 30px;
-  padding: 15px 0;
-  text-align: center;
-  /** 代替 display: none; 列表快速滑动到底部能及时显示上拉加载的区域 */
-  visibility: hidden;
+.popup__container--enter {
+  animation: SlideInToTop 0.3s ease forwards, FadeIn 0.3s ease forwards;
 }
-/** 下拉刷新,上拉加载--提示文本 */
-.mescroll-downwarp .downwarp-tip {
-  display: inline-block;
-  font-size: 12px;
-  color: gray;
-  vertical-align: middle;
+.popup__container--exit {
+  animation: SlideOutFromBottom 0.3s ease forwards, FadeOut 0.3s ease forwards;
 }
-.mescroll-downwarp .downwarp-tip {
-  margin-left: 8px;
+.popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 12px;
 }
-/** 下拉刷新，上拉加载--旋转进度条 */
-.mescroll-downwarp .downwarp-progress {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  /* border: 1px solid gray; */
-  border-bottom-color: transparent;
-  vertical-align: middle;
-}
-/** 旋转动画 */
-.mescroll-rotate {
-  animation: mescroll-rotate 0.6s linear infinite;
-}
-@keyframes mescroll-rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-/*无任何数据的空布局*/
-.mescroll-empty {
-  width: 100%;
-  padding-top: 20px;
+.popup__title {
+  font-size: 16px;
+  color: #222222;
+  line-height: 0.44rem;
   text-align: center;
 }
-.mescroll-empty .empty-icon {
-  width: 45%;
+.popup__content {
+  padding: 0 12px;
+  min-height: 330px;
 }
-.mescroll-empty .empty-tip {
-  margin-top: 6px;
-  font-size: 14px;
-  color: gray;
+.popup__footer {
+  padding: 6px 12px;
+  border-top: 1px solid #e6e6e6;
+  background-color: #ffffff;
 }
-.mescroll-empty .empty-btn {
-  max-width: 50%;
-  margin: 20px auto;
-  padding: 10px;
-  border: 1px solid #65aadd;
-  border-radius: 6px;
-  background-color: white;
-  color: #65aadd;
+.popup__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 0;
+  background-color: #dab378;
+  border-radius: 20px;
 }
-.mescroll-empty .empty-btn:active {
-  opacity: 0.75;
+.popup__btn-text {
+  font-size: 16px;
+  color: #222222;
+  line-height: 22px;
 }
-/** 回到顶部的按钮 */
-.mescroll-totop {
-  z-index: 9990;
-  position: fixed;
-  right: 10px;
-  bottom: 30px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  opacity: 0;
-}
-/** 显示动画--淡入 */
-.mescroll-lazy-in,
-.mescroll-fade-in {
-  animation: mescroll-fade-in 0.5s linear forwards;
-}
-@keyframes mescroll-fade-in {
+
+@keyframes FadeIn {
   0% {
     opacity: 0;
   }
@@ -187,12 +121,7 @@ body {
     opacity: 1;
   }
 }
-/** 隐藏动画--淡出 */
-.mescroll-fade-out {
-  pointer-events: none;
-  animation: mescroll-fade-out 0.5s linear forwards;
-}
-@keyframes mescroll-fade-out {
+@keyframes FadeOut {
   0% {
     opacity: 1;
   }
@@ -200,20 +129,35 @@ body {
     opacity: 0;
   }
 }
-/** 滚动条轨道背景(默认在PC端设置) */
-.mescroll-bar::-webkit-scrollbar-track {
-  background-color: transparent;
+@keyframes FadeIn2 {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
-/** 滚动条轨道宽度 (默认在PC端设置) */
-.mescroll-bar::-webkit-scrollbar {
-  width: 6px;
+@keyframes FadeOut2 {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
 }
-/** 滚动条游标 (默认在PC端设置) */
-.mescroll-bar::-webkit-scrollbar-thumb {
-  border-radius: 6px;
-  background-color: #ccc;
+@keyframes SlideInToTop {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
-/** 滚动条游标鼠标经过的颜色变化 (默认在PC端设置) */
-.mescroll-bar::-webkit-scrollbar-thumb:hover {
-  background-color: #aaa;
+@keyframes SlideOutFromBottom {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
 }

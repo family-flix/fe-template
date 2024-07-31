@@ -1,8 +1,8 @@
-import { onMount } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 
 import { ScrollViewCoreV2 } from "@/domains/scroll_view_v2";
-import { connectScroll, connectDownIndicator, connectUpIndicator } from "@/domains/scroll_view_v2/connect.web";
+import { connectScroll, connectIndicator as connectIndicator } from "@/domains/scroll_view_v2/connect.web";
 
 export const Root = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttributes<HTMLDivElement>) => {
   const { store } = props;
@@ -15,37 +15,13 @@ export const Root = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttributes<HTM
     }
     connectScroll(store, elm);
   });
-
-  return (
-    <div
-      class={props.class}
-      ref={(e) => {
-        elm = e;
-        if (typeof props.ref === "function") {
-          props.ref(e);
-          return;
-        }
-        props.ref = e;
-      }}
-    >
-      {props.children}
-    </div>
-  );
-};
-export const DownIndicator = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttributes<HTMLDivElement>) => {
-  const { store, ...rest } = props;
-
-  let elm: undefined | HTMLDivElement;
-
-  onMount(() => {
-    if (!elm) {
-      return;
-    }
-    connectDownIndicator(store, elm);
+  onCleanup(() => {
+    store.destroy();
   });
 
   return (
     <div
+      class={props.class}
       ref={(e) => {
         elm = e;
         if (typeof props.ref === "function") {
@@ -54,14 +30,12 @@ export const DownIndicator = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttri
         }
         props.ref = e;
       }}
-      class={props.class}
-      style={{ height: 0 }}
     >
       {props.children}
     </div>
   );
 };
-export const UpIndicator = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttributes<HTMLDivElement>) => {
+export const Indicator = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttributes<HTMLDivElement>) => {
   const { store, ...rest } = props;
 
   let elm: undefined | HTMLDivElement;
@@ -70,7 +44,7 @@ export const UpIndicator = (props: { store: ScrollViewCoreV2 } & JSX.HTMLAttribu
     if (!elm) {
       return;
     }
-    connectUpIndicator(store, elm);
+    connectIndicator(store, elm);
   });
 
   return (

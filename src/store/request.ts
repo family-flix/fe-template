@@ -3,7 +3,6 @@ import { connect } from "@/domains/http_client/connect.axios";
 import { Result } from "@/types";
 
 const _client = new HttpClientCore({
-  hostname: window.location.origin,
 });
 connect(_client);
 
@@ -11,9 +10,6 @@ connect(_client);
 export const client: HttpClientCore = {
   hostname: _client.hostname,
   headers: _client.headers,
-  async cancel<T>(...args: Parameters<typeof _client.cancel>) {
-    return _client.cancel(...args);
-  },
   async setHeaders<T>(...args: Parameters<typeof _client.setHeaders>) {
     return _client.setHeaders(...args);
   },
@@ -41,5 +37,8 @@ export const client: HttpClientCore = {
       return Result.Err(msg, code, data);
     }
     return Result.Ok(data);
+  },
+  async cancel<T>(...args: Parameters<typeof _client.cancel>) {
+    return _client.cancel(...args);
   },
 };

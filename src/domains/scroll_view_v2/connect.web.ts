@@ -1,8 +1,7 @@
 import { ScrollViewCoreV2, PointEvent } from "./index";
 import { preventDefault } from "./utils";
 
-const SpeedClassName = "mescroll--hardware";
-const HeightTransitionClassName = "mescroll-downwarp-reset";
+const SpeedClassName = "enable-hardware";
 
 export function connectScroll(store: ScrollViewCoreV2, $scroll: HTMLDivElement) {
   function handlePointerDown(e: PointEvent) {
@@ -209,36 +208,20 @@ export function connectScroll(store: ScrollViewCoreV2, $scroll: HTMLDivElement) 
   };
 }
 
-export function connectDownIndicator(store: ScrollViewCoreV2, $indicator: HTMLDivElement) {
-  store.changeDownIndicatorHeight = (height) => {
+export function connectIndicator(store: ScrollViewCoreV2, $indicator: HTMLDivElement) {
+  store.changeIndicatorHeight = (height) => {
     $indicator.style.height = height + "px";
   };
   let hasTransition = false;
-  store.setDownIndicatorHeightTransition = (addOrRemove) => {
+  store.setIndicatorHeightTransition = (addOrRemove) => {
     if (addOrRemove && hasTransition === false) {
-      $indicator.classList.add(HeightTransitionClassName);
+      // $indicator.classList.add(HeightTransitionClassName);
+      $indicator.style.transition = "height 300ms";
       hasTransition = true;
     }
     if (!addOrRemove && hasTransition === true) {
-      $indicator.classList.remove(HeightTransitionClassName);
-      hasTransition = false;
-    }
-  };
-}
-
-export function connectUpIndicator(store: ScrollViewCoreV2, $indicator: HTMLDivElement) {
-  store.changeUpIndicatorHeight = (height) => {
-    console.log($indicator);
-    $indicator.style.height = height + "px";
-  };
-  let hasTransition = false;
-  store.setUpIndicatorHeightTransition = (addOrRemove) => {
-    if (addOrRemove && hasTransition === false) {
-      $indicator.classList.add(HeightTransitionClassName);
-      hasTransition = true;
-    }
-    if (!addOrRemove && hasTransition === true) {
-      $indicator.classList.remove(HeightTransitionClassName);
+      // $indicator.classList.remove(HeightTransitionClassName);
+      $indicator.style.transition = "unset";
       hasTransition = false;
     }
   };

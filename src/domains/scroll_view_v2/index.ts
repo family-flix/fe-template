@@ -34,8 +34,6 @@ enum Events {
   Pulling,
   PullToRefresh,
   PullToRefreshFinished,
-  PullToLoadMore,
-  PullToLoadMoreFinished,
   InUpOffset,
   OutUpOffset,
   Scrolling,
@@ -47,8 +45,6 @@ type TheTypesOfEvents = {
   [Events.Pulling]: { instance: number };
   [Events.PullToRefresh]: void;
   [Events.PullToRefreshFinished]: void;
-  [Events.PullToLoadMore]: void;
-  [Events.PullToLoadMoreFinished]: void;
   [Events.InUpOffset]: void;
   [Events.OutUpOffset]: void;
   [Events.Scrolling]: { scrollTop: number };
@@ -161,7 +157,7 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
   optDown: PullToDownOptions;
 
   isPullToRefreshing = false;
-  isPullToLoadingMore = false;
+  isLoadingMore = false;
   startPoint: { x: number; y: number } = {
     x: 0,
     y: 0,
@@ -229,14 +225,14 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
   }
   /** 显示下拉进度布局 */
   startPullToRefresh = () => {
-    console.log("[DOMAIN]ScrollView - startPullToRefresh", this.isPullToRefreshing);
+    // console.log("[DOMAIN]ScrollView - startPullToRefresh", this.isPullToRefreshing);
     if (this.isPullToRefreshing) {
       return;
     }
     this.isPullToRefreshing = true;
     this.downHight = this.optDown.offset;
-    this.setDownIndicatorHeightTransition(true);
-    this.changeDownIndicatorHeight(this.downHight);
+    this.setIndicatorHeightTransition(true);
+    this.changeIndicatorHeight(this.downHight);
     this.emit(Events.PullToRefresh);
   };
   /** 结束下拉刷新 */
@@ -245,7 +241,7 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
       return;
     }
     this.downHight = 0;
-    this.changeDownIndicatorHeight(this.downHight);
+    this.changeIndicatorHeight(this.downHight);
     this.isPullToRefreshing = false;
     this.emit(Events.PullToRefreshFinished);
   };
@@ -310,19 +306,18 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
           if (angle && angle < this.optDown.minAngle) {
             return;
           }
-          console.log("angle", angle, this.maxTouchMoveInstanceY);
           // 如果手指的位置超过配置的距离，则提前结束下拉，避免 Webview 嵌套导致 touchend 无法触发
           if (this.maxTouchMoveInstanceY > 0 && curPoint.y >= this.maxTouchMoveInstanceY) {
             this.inTouchEnd = true;
             this.handleTouchEnd();
             return;
           }
-          console.log("before this.downHight < this.optDown.offset");
+          // console.log("before this.downHight < this.optDown.offset");
           if (this.downHight < this.optDown.offset) {
             if (this.movetype !== "pulling") {
               if (this.movetype === "pending") {
                 // console.log("start");
-                this.setDownIndicatorHeightTransition(false);
+                this.setIndicatorHeightTransition(false);
                 if (this.os.ios && !this.inTopWhenPointDown) {
                   this.optimizeScroll(true);
                 }
@@ -342,14 +337,13 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
             }
           }
           this.downHight = damping(curPoint.y - this.startPoint.y, 1000);
-          this.changeDownIndicatorHeight(this.downHight);
+          this.changeIndicatorHeight(this.downHight);
           this.emit(Events.Pulling, {
             instance: this.downHight,
           });
         }
       }
     }
-    // console.log("move", instanceY, this.inBottomWhenPointDown);
     if (instanceY < 0) {
       const scrollHeight = this.getScrollHeight();
       const clientHeight = this.getScrollClientHeight();
@@ -357,11 +351,6 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
       if (toBottom <= 0) {
         preventDefault(e);
       }
-      // if (!this.inBottomWhenPointDown) {
-      //   return;
-      // }
-      // this.upHight = damping(Math.abs(curPoint.y - this.startPoint.y), 1000);
-      // this.changeUpIndicatorHeight(this.upHight);
     }
     this.lastPoint = curPoint;
   };
@@ -375,12 +364,9 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
     if (this.downHight >= this.optDown.offset) {
       this.startPullToRefresh();
     } else {
-      // 不符合的话，则重置
       this.downHight = 0;
-      // this.downwarp.classList.add(this.optDown.resetClass);
-      // this.downwarp.style.height = "0px";
-      this.setDownIndicatorHeightTransition(true);
-      this.changeDownIndicatorHeight(0);
+      this.setIndicatorHeightTransition(true);
+      this.changeIndicatorHeight(0);
     }
     this.optimizeScroll(false);
     this.movetype = "pending";
@@ -389,49 +375,28 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
   handleScrolling = () => {
     const scrollTop = this.getScrollTop();
     const isUp = scrollTop - this.preScrollY > 0;
-    if (!this.isPullToLoadingMore) {
+    if (!this.isLoadingMore) {
       const toBottom = this.getScrollHeight() - this.getScrollClientHeight() - scrollTop;
       if (toBottom <= this.threshold && isUp) {
         // 如果滚动条距离底部指定范围内且向上滑,则执行上拉加载回调
         // this.startReachBottom();
+        this.isLoadingMore = true;
         this.emit(Events.ReachBottom);
       }
     }
     this.emit(Events.Scrolling, { scrollTop });
   };
-  startPullToLoadMore() {
-    if (this.isPullToLoadingMore) {
-      return;
-    }
-    this.isPullToLoadingMore = true;
-    this.upHight = 80;
-    this.setUpIndicatorHeightTransition(true);
-    this.changeUpIndicatorHeight(this.upHight);
-    this.emit(Events.PullToLoadMore);
-  }
-  finishPullToLoadMore() {
-    if (!this.isPullToLoadingMore) {
-      return;
-    }
-    this.upHight = 0;
-    this.changeUpIndicatorHeight(this.upHight);
-    this.isPullToLoadingMore = false;
-    this.emit(Events.PullToLoadMoreFinished);
+  finishLoadingMore() {
+    this.isLoadingMore = false;
   }
   setBounce = (isBounce: boolean) => {
     console.log("请在 connect 中实现 setBounce 方法");
   };
-  changeDownIndicatorHeight(height: number) {
+  changeIndicatorHeight(height: number) {
     console.log("请在 connect 中实现 changeDownIndicatorHeight 方法");
   }
-  setDownIndicatorHeightTransition(set: boolean) {
+  setIndicatorHeightTransition(set: boolean) {
     console.log("请在 connect 中实现 addDownIndicatorHeightTransition 方法");
-  }
-  changeUpIndicatorHeight(height: number) {
-    console.log("请在 connect 中实现 changeUpIndicatorHeight 方法");
-  }
-  setUpIndicatorHeightTransition(set: boolean) {
-    console.log("请在 connect 中实现 addUpIndicatorHeightTransition 方法");
   }
   optimizeScroll(optimize: boolean) {
     console.log("请在 connect 中实现 optimizeScroll 方法");
@@ -486,12 +451,6 @@ export class ScrollViewCoreV2 extends BaseDomain<TheTypesOfEvents> {
   }
   outDownOffset(handler: Handler<TheTypesOfEvents[Events.OutDownOffset]>) {
     return this.on(Events.OutDownOffset, handler);
-  }
-  inUpOffset(handler: Handler<TheTypesOfEvents[Events.InUpOffset]>) {
-    return this.on(Events.InUpOffset, handler);
-  }
-  outUpOffset(handler: Handler<TheTypesOfEvents[Events.OutUpOffset]>) {
-    return this.on(Events.OutUpOffset, handler);
   }
   onPulling(handler: Handler<TheTypesOfEvents[Events.Pulling]>) {
     return this.on(Events.Pulling, handler);

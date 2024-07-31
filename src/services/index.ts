@@ -1,10 +1,10 @@
 /**
  *
  */
-import { CancelToken } from "axios";
 import dayjs from "dayjs";
 
 import { FetchParams } from "@/domains/list/typing";
+import { request } from "@/domains/request/utils";
 import {
   JSONObject,
   ListResponse,
@@ -14,13 +14,12 @@ import {
   Result,
   Unpacked,
   UnpackedResult,
-} from "@/types";
-import { DriveTypes, MediaErrorTypes, MediaTypes, ReportTypeTexts, ReportTypes } from "@/constants";
-import { bytes_to_size, query_stringify } from "@/utils";
-import { request } from "@/domains/request/utils";
+} from "@/types/index";
+import { DriveTypes, MediaErrorTypes, MediaTypes, ReportTypeTexts, ReportTypes } from "@/constants/index";
+import { bytes_to_size, query_stringify } from "@/utils/index";
 
-export function ping() {
-  return request.post("/api/ping");
+export function ping(values: any) {
+  return request.post("/api/ping", values);
 }
 
 export function pingPayload(...args: JSONObject[]) {
